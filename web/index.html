@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>地学 SQL 文献日报</title>
+<meta name="description" content="每日精选：LLM 生成空间 / 地学 SQL 相关的高价值论文解读">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23245c4f'/><path d='M8 22 L14 12 L18 18 L21 14 L25 22 Z' fill='%23f3efe6'/></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M7 23 L13.5 11 L18 18.5 L21 14 L26 23 Z" fill="var(--surface)"/></svg>
+    <div>
+      <h1>地学 SQL 文献日报</h1>
+      <p class="sub" id="updated">加载中…</p>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button data-view="day" class="active">每日</button>
+    <button data-view="stars">收藏 <span id="star-count"></span></button>
+  </nav>
+  <div class="tools">
+    <input id="search" type="search" placeholder="搜索标题、标签、解读…" autocomplete="off">
+    <button id="theme" class="icon-btn" title="切换深色/浅色" aria-label="切换主题">◐</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h2 class="side-title">往期</h2>
+    <select id="date-select" aria-label="选择日期"></select>
+    <ol id="date-list"></ol>
+  </aside>
+  <main id="main" aria-live="polite"></main>
+</div>
+
+<footer class="foot">
+  检索来源：arXiv · OpenAlex · Semantic Scholar ｜ 由 LLM 自动筛选与解读，重要结论请以原文为准
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,723 @@
+{
+ "date": "2026-11-15",
+ "generated_at": "2026-11-14T16:17:44+00:00",
+ "stats": {
+  "fetched": 363,
+  "unique": 318,
+  "unseen": 318,
+  "candidates": 93,
+  "scored": 93,
+  "deep": 5,
+  "skim": 10,
+  "seconds": 310,
+  "tokens": 143873,
+  "llm_calls": 17
+ },
+ "deep": [
+  {
+   "uid": "doi:10.64898/2026.10.31.763119",
+   "doi": "10.64898/2026.10.31.763119",
+   "title": "SPaRTA: Spatial Reasoning in Text-to-SQL for Omics Analysis",
+   "authors": [
+    "Arka Dutta",
+    "Souvik Ghosh",
+    "Kenneth Prado",
+    "Ashiqur R. KhudaBukhsh",
+    "Hirak Sarkar"
+   ],
+   "venue": "bioRxiv (Cold Spring Harbor Laboratory)",
+   "published": "2026-11-04",
+   "url": "https://doi.org/10.64898/2026.10.31.763119",
+   "pdf_url": "https://www.biorxiv.org/content/biorxiv/early/2026/11/04/2026.10.31.763119.full.pdf",
+   "sources": [
+    "OpenAlex"
+   ],
+   "abstract": "Abstract Spatial-omics technologies provide clinicians, pathologists, and biomedical researchers with high-resolution maps of transcriptomic, proteomic, and metabolomic activity within tissues. However, querying these complex datasets often requires specialized computational expertise, limiting their accessibility to domain experts without programming experience. In the current manuscript, we develop SPaRTA (Spatial Reasoning in Text-to-SQL for Omics Analysis), a natural-language interface that translates free-text questions into executable spatial SQL queries over such data. We release SPaRTA -Bench, comprising dataset-specific database schemas, explicit query conventions, and 7,500 question–SQL pairs validated through LLM-assisted verification and targeted human review, spanning breast cancer, pancreatic cancer, and melanoma tissue sections, and identify 15 failure modes in which a query runs but returns a wrong answer. Openweight large language models (LLMs) of the Llama , Mistral , Qwen , Gemma and Phi families reach 10–40% execution accuracy zero-shot, and at most 61% with reasoning and execution feedback. Fine-tuning raises them to 63–77%, and they lose at most 6 percentage points on a tissue unseen in training. Execution feedback repairs queries that fail to run, but rarely queries that run and return a wrong answer. Code and data github.com/sarkar-lab/SPARTA_public",
+   "scores": {
+    "relevance": 10.0,
+    "novelty": 8.0,
+    "transfer": 9.0,
+    "rigor": 8.0
+   },
+   "score": 9.05,
+   "direction": "空间/地学 Text-to-SQL",
+   "one_liner": "首个空间组学Text-to-SQL基准SPaRTA-Bench，直接研究空间SQL生成，15种执行正确但结果错误的failure mode分析对PostGIS纠错极具借鉴价值。",
+   "digest": {
+    "tldr": "构建了面向空间组学数据的NL2SQL基准SPaRTA-Bench（7500对），开源LLM微调后执行准确率达63–77%，并识别出15种查询运行但结果错误的静默失败模式。",
+    "problem": "空间组学数据查询需要结合分子、细胞和空间推理，现有NL2SQL基准未覆盖此类复合语义；更棘手的是，生成的SQL可能正常运行但返回生物学错误结论（静默失败），仅靠执行状态无法检测，这对临床等高风险场景尤为危险。",
+    "method": [
+     "基于模板的基准构建：由领域专家和LLM协作生成问题模板，再实例化为自然语言问题与SQL对，通过独立重推导、半样本数据库验证、规则检查与人工审核确保质量，最终保留7500对。",
+     "显式查询约定：为每个数据集提供书面约定文档，固定术语到数据库实体的映射（如哪些细胞类型算免疫细胞）、空间谓词半径、稀疏表达矩阵的连接方式等，消除自然语言中的隐含歧义。",
+     "静默失败分类：通过对比错误预测与金标准在11个关键决策上的差异，归纳出15种失败模式，分为语义错误（如术语映射错误）、忠实性错误（如遗漏距离条件）和结构性错误（如用内连接丢弃零表达细胞）。",
+     "多维度模型评估：在零样本直接、思维链推理、执行反馈（最多3轮修正）和LoRA微调（含跨组织迁移）四种设置下，测试6个开源LLM，并以执行准确率（EX）作为主指标，要求预测结果行集与金标准完全一致。"
+    ],
+    "evidence": [
+     "在1468个测试对上，开源模型零样本直接模式EX仅9.5–39.7%（Phi-4最高39.7%），微调后提升至63–77%（Gemma-4-12B达76.9%），且跨组织迁移仅下降最多5.7个百分点。",
+     "执行反馈能修复14%的运行失败查询，但仅修复4%的运行但结果错误的查询，说明基于报错的自我修正对静默失败几乎无效。",
+     "15种失败模式覆盖了基础模型79%的静默失败，其中术语解析错误在弱模型中最常见（Llama-3.1-8B达45%），而稀疏连接错误在所有模型中普遍存在（12–26%）。",
+     "微调后术语错误降至7%，空间谓词错误降至10%，但仍有54%的剩余失败无法被11个检测器捕获，表明存在更深层的推理错误。"
+    ],
+    "value": "首次为空间组学数据构建了系统的NL2SQL基准，并明确聚焦于静默失败这一被多数基准忽略的问题。通过引入显式查询约定和半样本验证，提供了一套可复现的查询正确性保障流程。对空间SQL生成中领域知识嵌入、歧义消解和错误分析提供了深入见解，其方法可迁移至其他需要空间推理的SQL生成场景。",
+    "inspiration": [
+     "在你们的GeoSQL-Eval中，可以借鉴“约定文档”机制，为每道题明确空间术语到具体PostGIS函数和参数的映射（如“附近”对应ST_DWithin的半径值），减少评测中的歧义，使评分更客观。",
+     "将半样本数据库验证引入你们的基准构建：对每条金标准SQL，在随机分割的两个数据副本上执行，要求结果一致，可有效筛除仅在全量数据上偶然正确的查询。",
+     "关注静默失败模式，尤其是空间函数选择错误（如ST_Contains与ST_Within混淆）和稀疏数据连接错误（如用INNER JOIN导致零值行丢失），在PostGISer的错误分析中可专门统计这些类别。",
+     "微调策略上，该工作使用LoRA在7500对数据上即获得35–58个百分点的提升，且跨组织迁移良好，说明中等规模的领域特定数据即可显著增强模型对空间SQL语法的掌握，你们的PostGISer微调可参考其数据规模和多样性设计。",
+     "执行反馈对静默失败无效的结论提示，仅靠数据库报错不足以修复语义错误，未来可探索结合查询结果的可视化或统计特征作为额外反馈信号，用于Agent化SQL生成流程中的纠错环节。"
+    ],
+    "limitations": [
+     "基准仅基于Xenium平台三个组织切片，模板由LLM生成且问题并非临床医生真实提问，可能偏向模型偏好的表达方式，外部效度有限。",
+     "金标准由LLM构建并交叉验证，虽有人工审核，但模型家族间的系统性偏好可能未被完全消除（文中自报模型审计正确率93–97%）。",
+     "空间函数集主要面向几何计算，未涉及坐标参考系转换、动态投影等PostGIS进阶特性，与真实地理空间SQL仍有差距。"
+    ],
+    "verdict": "worth_reading",
+    "verdict_reason": "对空间SQL生成中的静默失败和语义歧义进行了深入分析，其基准构建方法与验证策略可直接启发PostGIS NL2SQL的评测与模型改进。",
+    "tags": [
+     "NL2SQL",
+     "空间SQL",
+     "基准构建",
+     "静默失败",
+     "微调",
+     "空间组学"
+    ],
+    "fulltext_source": "PDF"
+   }
+  },
+  {
+   "uid": "arxiv:2611.00815",
+   "arxiv_id": "2611.00815",
+   "doi": "10.18653/2026.emnlp-main.2686",
+   "title": "VCoT-SQL: Enhancing Text-to-SQL Generation through Dual Chain-of-Thought Validation Training",
+   "authors": [
+    "Rui Zhang",
+    "Yu-Jia Su",
+    "Rui-Xuan Li",
+    "Yu-Hua Li",
+    "Yi-Xin Su"
+   ],
+   "venue": "Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing",
+   "published": "2026-10-31",
+   "url": "https://arxiv.org/abs/2611.00815",
+   "pdf_url": "https://arxiv.org/pdf/2611.00815",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Open-source LLMs provide a flexible alternative to closed-source models for Text-to-SQL but still struggle with complex queries. Finetuning with chain-of-thought (CoT) data improves reasoning, yet standard datasets lack CoT annotations, requiring synthetic generation. Existing synthesis methods only verify the final answer, allowing flawed reasoning steps to corrupt the training data. We propose VCoT-SQL, a framework that improves Text-to-SQL generation through intermediate-step validated CoT supervision and a dedicated SQL validator, which enables small open-source models to outperform frontier closed-source models. VCoT-SQL trains two complementary models on curated reasoning traces: an SQL generator using clause-level CoT templates where reasoning steps are verified via execution and schema alignment checks, and an SQL validator using diagnostic CoT templates to detect syntactic, semantic, and type level errors. We further design a hierarchical schema filtering pipeline that integrates and refines complementary retrieval strategies to distill relevant database elements. VCoT-SQL achieves 66.82% execution accuracy on challenging dataset BIRD dev and 86.8% on Spider test, improving the base 7B model by 7% on BIRD. Notably, our CoT synthesis relies on 7B models yet outperforms methods that use 72B-scale or even proprietary closed source teachers for data generation, demonstrating that rigorous step-level validation can be more effective than scaling up teacher model size. Our dataset and code are available at https://github.com/INTREBID/VCoT-SQL.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 7.0,
+    "transfer": 8.0,
+    "rigor": 8.0
+   },
+   "score": 7.64,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "双 CoT 验证训练（生成器+校验器）+ 分层 schema 过滤，7B 模型超 72B 教师合成数据；step-level validation 与 schema linking 策略可直接迁移到空间 SQL 微调。",
+   "digest": {
+    "tldr": "VCoT-SQL通过中间步骤验证的CoT训练和专用SQL验证器，使7B开源模型在Text-to-SQL上超越闭源大模型，证明步骤级验证比扩大教师模型规模更有效。",
+    "problem": "开源小模型微调需要CoT数据，但现有合成方法只验证最终SQL正确性，导致中间推理步骤可能错误，污染训练数据，影响复杂查询性能。同时，模式链接和自纠正方法也存在不足，难以处理语义错误。",
+    "method": [
+     "子句驱动的CoT模板：将SQL生成分解为SELECT、WHERE、FROM等子句的推理步骤，采用“逻辑顺序”（先分析列、条件，最后选表），减少多余连接，并使推理结构化以便程序化验证。",
+     "多阶段CoT质量验证：对生成的CoT数据，不仅检查最终SQL执行结果与金标准是否一致，还通过启发式规则验证中间推理步骤是否正确引用了模式元素，并过滤掉泄露金标准SQL的样本，确保训练数据中推理步骤可靠。",
+     "多类型纠正CoT与SQL验证器训练：设计针对语法、语义、数据类型错误的诊断CoT模板，通过扰动金标准SQL生成错误SQL，再合成验证CoT数据，并经过格式、执行一致性、推理忠实性验证，训练专用验证器在推理时进行多面纠正。",
+     "训练无关的分层模式过滤管道：结合Pre-SQL检索（LLM生成粗粒度SQL并提取表/列/值）、列检索（嵌入语义匹配）和值检索（LSH+语义+编辑距离）三种互补策略，逐步精简模式，提高精度同时保持召回率，减少噪声。"
+    ],
+    "evidence": [
+     "在BIRD dev上，VCoT-SQL（XiYanSQL-QwenCoder-7B）达到66.82%执行准确率，比基础模型提升7%，超过GPT-4-turbo（62.06%）和OmniSQL（63.9%），且仅用10K训练样本（OmniSQL用2.5M）。",
+     "在Spider test上达到86.8%执行准确率，Spider dev 88.0%，均优于同规模模型。",
+     "消融实验：使用验证后的逻辑顺序CoT数据训练生成器，在BIRD dev上从基础58.87%提升到64.86%；验证器在BIRD dev上带来1.63%的净提升（纠正1.83%错误，仅0.20%正确变错）。",
+     "数据合成效率：仅用7B模型合成数据，下游7B模型在BIRD dev上达64.86%，优于用GPT-4o的EXCoT（59.65%）和用32B/72B的OmniSQL（59.60%）；当合成模型扩大到32B/72B时，下游7B模型仅提升至65.06%，说明步骤验证比扩大教师模型更有效。"
+    ],
+    "value": "首次系统地对Text-to-SQL的CoT中间步骤进行验证并用于训练专用验证器，使小模型具备可靠的自我纠正能力。在数据效率上显著优于依赖大模型蒸馏的方法，证明了“质量优于数量”的范式，为小模型在复杂推理任务上的应用提供了新路径。",
+    "inspiration": [
+     "空间SQL的CoT模板设计：可借鉴子句驱动模板，针对PostGIS查询设计包含空间函数选择（ST_*）、空间关系（ST_Intersects等）、坐标系转换（ST_Transform）等步骤的CoT模板，并采用逻辑顺序（先确定空间操作，再选表）。",
+     "CoT数据合成与验证策略：在合成空间SQL的CoT数据时，不仅要验证最终SQL的执行结果（如空间查询结果是否一致），还要验证中间推理步骤是否正确引用了空间列、空间函数参数是否合理、坐标系是否匹配，可通过解析CoT文本与金标准SQL中的空间元素进行匹配验证。",
+     "专用SQL验证器训练：可训练一个PostGIS SQL验证器，针对空间SQL常见错误（如坐标系不匹配、空间索引缺失、单位错误、函数参数顺序错误等）设计诊断CoT模板，通过扰动正确SQL生成训练数据，提升模型自我纠正能力。",
+     "模式过滤管道：在GeoSQL-Eval或实际应用中，数据库可能包含大量非空间表或列，可设计类似的分层过滤，利用LLM生成粗粒度空间SQL来提取相关空间表和列，再结合嵌入检索空间列和值（如地名），减少模式噪声。",
+     "数据效率与教师模型规模：PostGISer微调模型可能面临数据不足问题，可尝试用较小模型（如7B）通过严格验证合成高质量CoT数据，而不是依赖大模型蒸馏，这在空间SQL领域可能同样有效。"
+    ],
+    "limitations": [
+     "方法依赖SFT，未使用强化学习直接优化执行准确率，作者也提到未来将结合RL；验证器训练数据仅947个样本（来自BIRD），可能限制泛化能力，尤其在空间SQL领域错误类型不同。",
+     "模式过滤管道依赖LLM生成Pre-SQL，可能引入偏差；值检索部分借鉴CHESS，创新性有限。",
+     "实验仅在通用Text-to-SQL基准上，未涉及空间SQL或PostGIS，对于研究者的领域适用性需进一步验证。"
+    ],
+    "verdict": "worth_reading",
+    "verdict_reason": "该方法虽面向通用Text-to-SQL，但其CoT中间步骤验证和专用验证器训练策略可直接迁移至PostGIS空间SQL生成，为提升小模型空间推理能力提供具体可操作的新思路。",
+    "tags": [
+     "Chain-of-Thought",
+     "数据合成",
+     "Text-to-SQL",
+     "schema linking",
+     "验证器",
+     "小模型微调"
+    ],
+    "fulltext_source": "arXiv HTML"
+   }
+  },
+  {
+   "uid": "arxiv:2610.05060",
+   "arxiv_id": "2610.05060",
+   "title": "Why, Where, How: Taxonomy-guided Error Grounding for Code Repair in NL2SQL",
+   "authors": [
+    "Su-Chan Lee",
+    "Woo-Min Song",
+    "Hwanjo Yu",
+    "Sangwoo Mo"
+   ],
+   "venue": "",
+   "published": "2026-10-04",
+   "url": "https://arxiv.org/abs/2610.05060",
+   "pdf_url": "https://arxiv.org/pdf/2610.05060",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "SQL queries that large language models write from natural language questions can execute successfully yet produce incorrect results, so execution alone does not reveal what to fix. An error taxonomy says why the query is wrong, but not where to look or how to change it. Existing methods can guide SQL correction through feedback, error reports, or generated plans alongside an unmasked query. We introduce TEG(Taxonomy-guided Error Grounding), which turns a supplied diagnosis into a structured correction input for natural language-to-SQL (NL2SQL) correction. Type-specific rules map each error type to construct classes to reconsider and an edit operation to request. TEG masks the selected constructs in the query when applicable and states that operation in an edit instruction. TEG generates candidate corrections from this input, uses execution feedback to guide candidate selection, and repeats the process one annotation at a time for queries with several errors. On NL2SQL-BUGs, TEG reaches 47.3 single-error execution accuracy and 37.0 overall with Qwen2.5-7B-Instruct. Across the model sizes and thinking modes evaluated in the main comparison, TEG outperforms all evaluated baselines on single-error queries, even when the baselines receive the same error-type annotations. With predicted types, TEG stays above direct LLM correction and ErrorLLM on single-error queries.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 7.0,
+    "transfer": 8.0,
+    "rigor": 7.0
+   },
+   "score": 7.5,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "TEG将错误分类映射到结构化修正输入，单步mask+执行反馈选择，对PostGIS空间函数错误定位与修复有直接方法论价值。",
+   "digest": {
+    "tldr": "TEG 将 NL2SQL 错误类型映射为 SQL 构造掩码与编辑指令，引导 LLM 修正查询，在 NL2SQL-BUGs 上单错误准确率达 47.3%，显著优于现有方法。",
+    "problem": "LLM 生成的 SQL 可能执行成功但结果错误，仅凭执行反馈无法定位错误。现有错误分类只说明“为什么”错，未指明“哪里”错和“如何”改。本文要解决如何将错误类型诊断转化为可操作的修正输入，使 LLM 能精准修复语义错误。",
+    "method": [
+     "提出错误接地（error grounding）概念：将错误类型（why）映射到需重新考虑的 SQL 构造类（where）和编辑操作（how），构造修正输入而非直接预测错误位置。",
+     "设计基于 SQLGlot AST 的类型特定掩码规则：对 Mismatch/Redundancy 类错误掩码对应节点（如列表达式、WHERE 子句），对 Missing/Rewrite 类错误不掩码，让 LLM 在占位符引导下生成完整查询。",
+     "为每个错误类型指定编辑指令：Mismatch→替换，Redundancy→删除，Missing→插入，Rewrite→重构，指令随掩码状态动态调整。",
+     "采用执行反馈驱动的候选选择：生成多个候选查询，执行过滤（优先返回非空结果），再由 LLM 精炼器选择或改写，提升修正可靠性。",
+     "多错误顺序重接地：按 Mismatch→Redundancy→Missing→Rewrite 顺序逐条处理错误标注，每步更新查询后重新应用掩码与指令，避免多掩码冲突。"
+    ],
+    "evidence": [
+     "在 NL2SQL-BUGs 上，Qwen2.5-7B-Instruct 单错误执行准确率 TEG 达 47.3%，整体 37.0%，比 ErrorLLM 分别高 13.7 和 13.0 个百分点，比最强基线 CoT 高 11.8 个百分点。",
+     "去除掩码后（w/o masking），单错误准确率从 47.3% 降至 40.9%，整体从 37.0% 降至 33.9%，验证了掩码编辑配置的有效性。",
+     "使用 Opus 4.8 预测错误类型时，TEG 单错误准确率仍达 45.5%（7B），高于 ErrorLLM 的 32.7% 和 Base 的 30.0%，在预测类型仅 52.7% 匹配标注的情况下仍保持优势。",
+     "多错误查询上，TEG 在所有错误数量组均领先，2 错误准确率 36.7%，3+ 错误 29.6%，而最强基线 SQLFixAgent 分别为 26.9% 和 19.7%。"
+    ],
+    "value": "首次将错误类型诊断转化为结构化的修正输入（掩码+编辑指令），无需精确故障定位即可引导 LLM 修复 SQL。方法独立于模型，在多个规模、不同思维模式下均有效，且对预测错误类型具有鲁棒性。为 NL2SQL 错误修复提供了“诊断-接地-修正”的新范式，区别于单纯依赖推理或执行反馈的自修正方法。",
+    "inspiration": [
+     "可在你们的 GeoSQL-Eval 基准中增加“错误修复”子任务：给定错误的空间 SQL 及其错误类型（如空间函数误用、CRS 缺失、空间关系错误），评估模型在接地提示下的修正能力，并对比直接修正。",
+     "为 PostGIS 空间 SQL 定义错误分类与接地规则：例如“ST_Distance 单位错误”可掩码 ST_Distance 调用及参数，“坐标系不匹配”可掩码 ST_Transform 或几何列，“空间谓词错误”可掩码 ST_Intersects 等函数，并给出替换/插入指令。",
+     "借鉴 TEG 的候选选择策略：利用空间查询的执行反馈（如结果是否为空、几何类型是否合理、返回行数）过滤候选，再让 LLM 精炼，可提升空间 SQL 修复的可靠性。",
+     "多错误顺序修复思路可用于空间 SQL：先修正空间函数/表引用错误，再处理条件/子查询错误，每步重新解析查询树并应用掩码，避免一次性多掩码造成的上下文混乱。",
+     "在你们的 PostGISer 微调模型中，可合成带错误类型标注的修正训练数据，让模型学习从错误类型到掩码编辑的映射，提升对空间 SQL 语义错误的修复能力。"
+    ],
+    "limitations": [
+     "仅在通用 NL2SQL 基准 NL2SQL-BUGs 上评估，未涉及空间 SQL 或 PostGIS 特有错误，接地规则需针对空间函数、坐标系、几何类型等重新设计。",
+     "错误类型预测准确率仅 52.7%，实际应用中需依赖可靠的外部诊断器，且多错误修复准确率仍较低（3+ 错误仅 29.6%）。",
+     "方法依赖数据库执行反馈和多次 LLM 调用，推理成本较高（平均每查询 42.9 秒），且执行准确率不等价于语义等价，可能漏掉结果集相同但逻辑不同的错误。"
+    ],
+    "verdict": "worth_reading",
+    "verdict_reason": "提出了错误接地的结构化修正范式，对空间 SQL 错误修复有直接启发，但实验局限于通用 SQL，需迁移验证。",
+    "tags": [
+     "error grounding",
+     "NL2SQL",
+     "code repair",
+     "taxonomy-guided",
+     "masking",
+     "execution feedback"
+    ],
+    "fulltext_source": "arXiv HTML"
+   }
+  },
+  {
+   "uid": "arxiv:2611.03298",
+   "arxiv_id": "2611.03298",
+   "title": "SQLoom: Set-Contrastive Learning of Syntactic, Semantic, and Logical Dependencies for Text-to-SQL",
+   "authors": [
+    "Hao Fu",
+    "De-Gang Sun",
+    "Wan Wei",
+    "Jin-Xia Wei",
+    "Chun Long",
+    "Peng Gao"
+   ],
+   "venue": "",
+   "published": "2026-11-02",
+   "url": "https://arxiv.org/abs/2611.03298",
+   "pdf_url": "https://arxiv.org/pdf/2611.03298",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Text-to-SQL translates natural language questions into SQL queries, enabling database access without writing SQL. Fine-tuning open-weight large language models (LLMs) is cost-effective, but existing methods treat SQL as ordinary text and optimize token-level likelihood without explicitly modeling its syntactic, semantic, and logical requirements. Thus, a single incorrect alias or comparison operator can invalidate a query while contributing little to training loss. We propose SQLoom, a constraint-aware fine-tuning framework with supervision at three levels: syntactic validity under SQL grammar and database schema, semantic alignment between query decisions and the question, and logical consistency across dependent clause decisions. SQLoom extends supervised fine-tuning with a unified set-contrastive objective favoring sets of correct outputs over minimally different incorrect ones at each level. LLM agents propose this supervision, which a SQL parser and execution on counterexample databases verify. We also release Spider-Refined, a training dataset correcting 378 flawed Spider annotations and enriching database schemas. Experiments on Spider, BIRD, and three perturbed Spider variants show that SQLoom improves execution accuracy for Qwen3-1.7B from 62.9% zero-shot to 88.7% on Spider development, reaching 89.2% on Spider test and 73.4% on BIRD development. It outperforms fine-tuning, reinforcement learning, and agent-based baselines with up to 70 billion parameters. On question perturbations, SQLoom loses at most 0.6 accuracy points versus up to 12.1 for agent-based methods. It generates SQL in a single pass at 0.42s per query, 23$\\times$ faster than a GPT-4-based agent method. These results demonstrate the effectiveness of set-contrastive supervision over token-level training.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 7.0,
+    "transfer": 8.0,
+    "rigor": 7.0
+   },
+   "score": 7.5,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "三层约束感知的集合对比微调框架，用LLM Agent构造语法/语义/逻辑监督信号，对空间SQL的纠错与执行反馈微调有直接借鉴价值。",
+   "digest": {
+    "tldr": "SQLoom 提出集合对比微调，在语法、语义、逻辑三个层次显式约束 SQL 生成，使 1.7B 模型在 Spider 和 BIRD 上超越更大模型与代理方法，且推理仅需单次前向。",
+    "problem": "现有 Text-to-SQL 微调将 SQL 视为普通文本，仅优化 token 级似然，无法显式惩罚语法非法、语义错配或子句不一致的错误，导致一个错误别名或比较符即可使查询无效却几乎不被训练损失感知。该问题在空间 SQL 中更突出，因为空间函数（ST_*）参数类型严格、空间关系语义微妙、连接与聚合间存在隐式依赖。",
+    "method": [
+     "三层约束监督：语法层利用增量解析器推导每个位置合法 token 集合，迫使模型将概率质量从非法 token 移向合法集合；语义层将问题短语对齐到 AST 节点，并对比正确决策与模型易混淆的错误决策（如 COUNT(*) vs COUNT(DISTINCT)）；逻辑层通过编辑问题构造依赖子句的成对查询，在反例数据库上验证一致性，迫使模型学习子句联动。",
+     "统一集合对比目标：对每个约束单元，定义正确输出集合与最小差异的错误输出集合，使用类似 DPO 的损失仅在被约束的 token 位置上拉高正确集合概率、压低错误集合概率，避免惩罚等价重写。",
+     "代理合成 + 程序验证：语义和逻辑约束由 LLM 代理提议（对齐代理、编辑代理等），但必须通过 SQL 解析器和反例数据库执行验证，确保负样本确为错误，代理错误仅减少数据量而不引入噪声。",
+     "三阶段训练：SFT 热身 → 加入三层约束的联合训练 → 基于检索的上下文增强与错误修正重放，配合权重平均防止遗忘。",
+     "Spider-Refined 数据集：在约束合成过程中发现并修正了 378 处 Spider 标注错误（如正确预测被判错、问题与查询不一致等），并丰富了 schema 描述。"
+    ],
+    "evidence": [
+     "在 Spider 上，Qwen3-1.7B 从 zero-shot 62.9% 提升至 88.7%（Dev）和 89.2%（Test），超过 JOLT-SQL（7B，86.8%）、SQL-R1（7B，88.7%）和 CogSQL（GPT-4 代理，86.4%）；在 BIRD 上达 73.4%，超过 OmniSQL-7B（63.9%）和 AskData（GPT-4o 代理，67.4%）。",
+     "消融实验：移除全部约束训练导致 Spider Test 下降 12.5 点、BIRD Dev 下降 9.7 点；将约束数据替换为等量 SFT 数据仍下降 8.8 和 10.3 点，证明收益来自约束形式而非数据量。",
+     "鲁棒性：在 Spider-DK、Syn、Realistic 三个扰动变体上，SQLoom 最多下降 0.6 点，而代理方法下降 8.8–12.1 点；跨数据集迁移（Spider→BIRD）比 SFT 高 8.8 点。",
+     "推理效率：单次生成 0.42 秒/查询，比基于 GPT-4 的 CogSQL 快 23 倍。"
+    ],
+    "value": "首次将 SQL 的语法、语义、逻辑约束统一为可微的集合对比目标，用程序化 oracle 保证负样本正确性，从根本上改变了 token 级模仿的微调范式。在 1.7B 规模上实现了超越大模型和昂贵代理方法的性能，证明了结构化监督比模型规模更重要。Spider-Refined 为社区提供了更干净的训练数据。该方法对空间 SQL 生成极具迁移潜力，因为空间函数和空间关系同样存在严格的语法、语义和逻辑约束。",
+    "inspiration": [
+     "可直接将三层约束框架迁移到 PostGIS SQL 生成：语法层利用 PostGIS 解析器（或基于语法规则）检查 ST_* 函数参数类型、CRS 一致性等；语义层对齐空间关系短语（如“within”“intersects”）到正确的 ST_ 函数，并对比常见混淆（如 ST_Within vs ST_Contains）；逻辑层捕捉空间连接（如 ST_Intersects 连接）与空间聚合（如 ST_Union）或 DISTINCT 之间的依赖，通过构造反例空间数据（如多对多空间匹配）验证。",
+     "在你们的 PostGISer 微调流程中，可引入集合对比损失替代纯 SFT：对每个训练样本，用解析器生成合法 token 集合作为正集，用模型自身错误挖掘构造语义和逻辑负样本，并用 PostGIS 执行反馈验证，从而强化对空间函数选择和参数使用的学习。",
+     "GeoSQL-Eval 基准可借鉴 Spider-Refined 的思路，审查并修正标注错误（如正确空间查询被判错、问题空间语义模糊等），并增加专门测试逻辑一致性的题目（例如：修改空间条件后，聚合方式是否相应调整）。",
+     "逻辑约束中的依赖图（如连接路径变更需检查聚合去重）可直接扩展至空间场景：例如添加 ST_Buffer 后距离单位是否与 CRS 匹配、空间连接从 ST_Intersects 改为 ST_DWithin 时距离参数和单位是否联动。",
+     "代理合成约束的方法可复用于生成 PostGIS 训练数据：用 LLM 代理生成空间问题变体及对应查询对，再通过 PostGIS 执行和空间数据反例验证，低成本扩充高质量微调数据。"
+    ],
+    "limitations": [
+     "论文实验基于 SQLite 语法，未涉及 PostGIS 特有的空间类型、空间索引或复杂几何处理，直接迁移需适配解析器和执行 oracle。",
+     "约束合成依赖 GPT-4 代理，成本较高（38K 次调用），且代理生成的质量会影响约束覆盖度，尽管有程序验证，仍可能遗漏部分错误模式。",
+     "逻辑依赖图目前仅覆盖常见子句关系，对于嵌套空间子查询、CTE 等复杂结构可能不完整，且反例数据库生成策略在空间数据上的有效性待验证。"
+    ],
+    "verdict": "must_read",
+    "verdict_reason": "该工作直接针对 SQL 生成的结构化约束问题，提出的集合对比微调框架和三层监督思路对 PostGIS 空间 SQL 生成有极强的可迁移性，且提供了具体的实现方案和验证手段。",
+    "tags": [
+     "集合对比学习",
+     "约束微调",
+     "Text-to-SQL",
+     "schema linking",
+     "数据合成",
+     "PostGIS 启发"
+    ],
+    "fulltext_source": "arXiv HTML"
+   }
+  },
+  {
+   "uid": "arxiv:2610.12274",
+   "arxiv_id": "2610.12274",
+   "title": "HarnessSQL: Harness-Native Training for SQL Agents in Realistic Database Environments",
+   "authors": [
+    "Hao-Lin Yang",
+    "Ji-Peng Zhang",
+    "Zhi-Qiang Qian",
+    "Jian Xie",
+    "Shuai-Shuai Gong",
+    "Yi-Ke Guo",
+    "Si-Rui Han"
+   ],
+   "venue": "",
+   "published": "2026-10-08",
+   "url": "https://arxiv.org/abs/2610.12274",
+   "pdf_url": "https://arxiv.org/pdf/2610.12274",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Text-to-SQL models are commonly trained to map questions directly to static queries, whereas real-world database agents operate through stateful, multi-turn interaction with live databases -- inspecting schemas, executing probe queries, diagnosing errors, and revising hypotheses. This creates a critical train-deploy mismatch, as the execution harness that mediates this interaction is introduced only at inference time. To bridge this gap, we propose HarnessSQL, a harness-native post-training framework that preserves the full interaction structure throughout both supervised fine-tuning and reinforcement learning. HarnessSQL builds isolated, executable database environments paired with hidden execution oracles, rolls out teachers directly inside the target SQL harness, and retains only verified trajectories for full-sequence SFT, followed by execution-reward RL. Across Spider 2.0-SQLite, HarnessSQL dramatically boosts the execution accuracy of compact models, raising Qwen3-8B from 15.5% to 45.2% and Qwen3-14B from 22.2% to 54.8%, while transferring effectively to out-of-distribution interactive benchmarks such as BIRD-Interact and LiveSQLBench. Our findings demonstrate that training database agents directly within their execution harness is essential for mastering complex, long-horizon database workflows.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 7.0,
+    "transfer": 8.0,
+    "rigor": 7.0
+   },
+   "score": 7.5,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "在真实执行环境中端到端训练SQL Agent，SFT+RL结合执行反馈，对空间SQL的纠错与多轮交互生成有强迁移价值。",
+   "digest": {
+    "tldr": "HarnessSQL 提出在交互式数据库执行环境中进行全轨迹 SFT 和 RL 的“harness-native”训练，将小模型在 Spider 2.0-SQLite 上的执行准确率从 15.5% 提升至 45.2%（8B），并有效迁移到交互式基准。",
+    "problem": "传统 Text-to-SQL 训练只学习从问题到静态 SQL 的映射，而实际部署的数据库 agent 需要多轮交互（探查 schema、执行试探查询、诊断错误、修正假设）。这种训练与部署的不匹配导致模型在真实交互环境中表现极差。该问题重要且困难，因为需要构建可执行环境、定义交互协议，并生成包含完整探索-执行-恢复过程的监督信号。",
+    "method": [
+     "可执行 SQL 环境构建：为每个数据库创建隔离沙箱，隐藏执行 oracle，采用“SQL-first”方式合成任务（先生成可执行 SQL，再反推自然语言问题），并通过确定性门控过滤低质量样本。",
+     "SQL 专用 harness 适配：将通用 agent 工具集精简为四个原语——sql_list_tables（列出表）、sql_schema（查看 DDL 和样本值）、sql_exec（执行只读查询）、sql_submit（提交最终 SQL），并注入行截断、重复调用提醒、上下文压缩等中间件，降低交互复杂度。",
+     "全轨迹监督微调（SFT）：用强教师模型在目标 harness 内交互生成轨迹，仅保留通过执行验证和协议检查的 2,512 条轨迹，对完整多轮序列进行 SFT，但将环境观察 token 的损失屏蔽，只训练模型基于运行时反馈进行推理、工具调用和错误恢复。",
+     "执行奖励强化学习（RL）：在相同 harness 环境中继续用 DAPO 算法优化，奖励仅为终端执行结果是否与隐藏 oracle 一致（稀疏二元奖励），让模型自主探索超出教师示范的修正路径。"
+    ],
+    "evidence": [
+     "在 Spider 2.0-SQLite（135 题）上，Qwen3-8B 执行准确率从基线的 15.5% 提升至 SFT 后的 30.4%，再经 RL 达到 45.2%；Qwen3-14B 从 22.2% → 37.8% → 54.8%。",
+     "跨基准迁移：在 BIRD-Interact Mini 上 8B/14B 分别达 9.0%/11.3%（基线 1.7%–3.0%），在 LiveSQLBench Base-Lite 上达 24.8%/28.5%（基线 7.0%–8.9%）。",
+     "消融实验：harness-native 训练 + 交互式推理（30.4%）远优于非交互训练 + 交互推理（9.6%）；全轨迹 SFT 优于按轮次拆分训练；上下文长度从 8K 增至 32K 带来持续提升（27.4% → 45.2%）。",
+     "行为分析：SFT+RL 后，无效调用率从 67.4% 降至 0.56%，严格协议违规从 83.2% 降至 11.5%，仅一次有效提交的轨迹比例从 18.7% 升至 93.5%。"
+    ],
+    "value": "首次将“harness-native training”理念系统性地应用于 SQL agent，证明训练与部署交互接口的对齐是提升小模型复杂数据库任务能力的关键。贡献了一套完整的环境构建、harness 设计、全轨迹 SFT 与执行奖励 RL 相结合的流水线，并展示了跨交互式基准的泛化能力，为从静态 NL2SQL 向交互式数据库 agent 的转变提供了训练范式。",
+    "inspiration": [
+     "可在你们的 PostGIS 空间 SQL 研究中构建类似的交互式沙箱环境，让模型能执行空间查询并获得真实的错误反馈（如坐标系不匹配、ST_ 函数参数错误），而不仅仅是静态生成 SQL。",
+     "借鉴其四工具精简 harness 设计，为空间 SQL 定义专用工具集，例如：list_spatial_tables（列出含几何列的表）、inspect_geometry（查看几何类型和 SRID）、exec_spatial_query（执行空间查询并返回结果或错误）、submit_final_sql。",
+     "在你们的 GeoSQL-Eval benchmark 中增加需要多步探索和错误恢复的交互式题目，例如要求先探查表结构、尝试查询后发现坐标系不一致、再修正查询，以检验模型的闭环交互能力。",
+     "微调 PostGISer 时，可采用“全轨迹 SFT + 执行奖励 RL”策略：先用强模型在 PostGIS 沙箱中生成包含空间错误恢复的轨迹进行 SFT，再用空间查询执行结果作为奖励进行 RL，让模型学会处理空间特有的运行时问题。",
+     "训练数据合成可采用“SQL-first”方式：先随机生成合法的 PostGIS 空间 SQL（控制难度），再反推自然语言问题，确保每个训练样本都有可执行 oracle，避免人工标注的覆盖偏差。"
+    ],
+    "limitations": [
+     "当前工作仅针对 SQLite，未涉及 PostgreSQL/PostGIS 等空间数据库方言，空间函数、坐标系、几何类型等特有挑战未被验证。",
+     "训练数据合成高度依赖强教师模型（Qwen3.6-27B），若教师本身在空间 SQL 上能力不足，生成的轨迹质量会严重退化（文中已证明弱教师导致性能下降）。",
+     "RL 仅使用稀疏终端奖励，对于需要多步空间推理的长序列任务，信用分配可能困难，且未探索中间过程奖励或空间语义正确性的部分反馈。"
+    ],
+    "verdict": "worth_reading",
+    "verdict_reason": "其 harness-native 训练思想对构建交互式空间 SQL agent 有直接借鉴意义，但需自行适配 PostGIS 环境和空间函数特性。",
+    "tags": [
+     "harness-native training",
+     "SQL agent",
+     "交互式 Text-to-SQL",
+     "执行反馈",
+     "强化学习",
+     "全轨迹 SFT"
+    ],
+    "fulltext_source": "arXiv HTML"
+   }
+  }
+ ],
+ "skim": [
+  {
+   "uid": "doi:10.48550/arxiv.2611.04318",
+   "arxiv_id": "2611.04318",
+   "doi": "10.48550/arxiv.2611.04318",
+   "title": "Text-to-SQL Models Make Choices Without Saying So",
+   "authors": [
+    "Yichen Xu",
+    "仕沛 林",
+    "Chenhao Ma"
+   ],
+   "venue": "arXiv (Cornell University)",
+   "published": "2026-11-03",
+   "url": "https://doi.org/10.48550/arxiv.2611.04318",
+   "pdf_url": "https://arxiv.org/pdf/2611.04318",
+   "sources": [
+    "OpenAlex"
+   ],
+   "abstract": "A text-to-SQL answer can run, return a plausible number and still compute something other than what the analyst meant. This can happen when the request leaves a calculation choice open, such as whether to count rows or distinct entities, and the model settles it without saying so. Standard benchmarks cannot detect this, because they score each question against a single reference interpretation. We introduce SpecBridge, which tests such a choice by varying it alone: it poses three otherwise identical requests, one leaving the choice open and one per interpretation, and scores each answer by running it. The databases are real, and the choices are ones that made models fail on existing benchmarks. On 204 hand-validated tests, four language models usually compute each interpretation when asked for it, yet for the open request return both in only 15-58% of the tests where they can, often without mentioning the choice. The gap lies in reporting, not in computing. Benchmarks even penalize the alternative: on BIRD questions where such a choice changes the answer, over two in five of the answers marked wrong are right under the other interpretation. Because the gap lies in reporting, a system can narrow it without a stronger model: it first decides whether a request leaves a choice open, then answers each interpretation in its own call. On our tests and on AMBROSIA, an existing benchmark of ambiguous questions, this approach raises the share of open requests that get every interpretation by 29-63 points over the single answer that production assistants give, without lowering precision on clear requests. It also needs fewer user turns than asking a clarifying question.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 8.0,
+    "transfer": 7.0,
+    "rigor": 7.0
+   },
+   "score": 7.45,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "揭示Text-to-SQL模型隐式做选择却不报告的问题，提出SpecBridge评测歧义请求；对空间SQL中隐式CRS/单位选择有直接启发。"
+  },
+  {
+   "uid": "doi:10.1145/3832269",
+   "doi": "10.1145/3832269",
+   "title": "Cracking Query Bottlenecks: Towards Efficiency-Oriented Text-to-SQL Generation",
+   "authors": [
+    "Li Lin",
+    "Yun-Feng Shen",
+    "Ling-Feng Bao",
+    "Rong-Xin Wu",
+    "Yang Liu"
+   ],
+   "venue": "Proceedings of the ACM on Software Engineering",
+   "published": "2026-10-01",
+   "url": "https://www.semanticscholar.org/paper/aeb1732cf255fa6fe765374ed3da6b34a73985bc",
+   "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3832269?download=true",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Text-to-SQL models translate natural language questions into SQL, enabling non-technical users to access databases. However, most existing research focuses on correctness, neglecting query efficiency. In this paper, we address the challenge of evaluating the execution efficiency of generated SQL in Text-to-SQL by introducing EESQLBench, a novel benchmark designed to assess both correctness and efficiency. EESQLBench pairs each natural language question with an expert-optimized SQL query, providing a reliable efficiency baseline. We evaluate six representative large language models (LLMs), including four open-source models (SQLCoder, CodeLlama, DeepSeek-Coder, and DeepSeek-R1) and two closed-source models (GPT-5.2 and Gemini-2.5-Pro), using cost-based metrics including Cost Reachability (CR) and Acceptable Reachability at kk (AR@kk). Our results reveal that current LLMs, despite achieving high correctness, struggle to produce efficient queries. We observe substantial efficiency gaps between models and emphasize that semantic correctness alone does not guarantee query efficiency. Furthermore, we provide insights into common inefficiency patterns in LLM-generated SQL queries, such as missing access pruning and inefficient subquery logic.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 7.0,
+    "transfer": 7.0,
+    "rigor": 7.0
+   },
+   "score": 7.25,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "首个面向Text-to-SQL的效率评测基准EESQLBench，揭示正确性≠效率，对空间SQL执行优化与评测维度扩展有重要启发。"
+  },
+  {
+   "uid": "arxiv:2610.05540",
+   "arxiv_id": "2610.05540",
+   "doi": "10.1145/3856369",
+   "title": "SALUS: Automated Auditing of NL-to-SQL Benchmarks through Weak Supervision of Multi-Agent Output",
+   "authors": [
+    "Shi-Yuan Zhou",
+    "A. Colaco",
+    "Sainyam Galhotra",
+    "Sharad Mehrotra"
+   ],
+   "venue": "",
+   "published": "2026-10-04",
+   "url": "https://arxiv.org/abs/2610.05540",
+   "pdf_url": "https://arxiv.org/pdf/2610.05540",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Natural language to SQL (NL-to-SQL) benchmarks are foundational to progress in data analysis research, yet recent work has shown that widely-used benchmarks contain significant annotation errors. These errors silently corrupt evaluation metrics, penalize correct model output, and distort the field's understanding of state-of-the-art performance. We present SALUS, a system that automatically detects annotation errors in NL-to-SQL benchmarks. SALUS frames benchmark auditing as a weakly supervised error detection: SQL generated by multiple LLM agents drive a suite of complementary weak-labeling functions. By passing this noisy vote matrix through a generative label model, we extract high-confidence training samples without requiring human ground truth. These samples train a decision plane that maps gold SQL query features to per-agent trustworthiness, allowing SALUS to intelligently fuse reliability estimates with raw verdicts for rigorous benchmark error detection. We evaluate on BIRD-Clean-xs, a benchmark of 298 BIRD development tasks with manually verified correctness labels. SALUS achieves F1 = 0.9194, significantly outperforming the state-of-the-art baselines. Applying SALUS to the full development sets, we estimate annotation error rates of approximately 37% on BIRD and 27% on Spider.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 7.0,
+    "transfer": 7.0,
+    "rigor": 7.0
+   },
+   "score": 7.25,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "多Agent弱监督自动审计NL2SQL基准标注错误，发现BIRD错误率约37%，对构建空间SQL评测基准的标注质量控制有直接启发。"
+  },
+  {
+   "uid": "doi:10.3390/info17111089",
+   "doi": "10.3390/info17111089",
+   "title": "SCDS: Data Synthesis with Structural Priors via Large Language Models for Text-to-SQL",
+   "authors": [
+    "Hao-Yu Zhang",
+    "Ying-Qi Zou",
+    "Xiang-Yu Wang",
+    "Shao-Han Wang",
+    "Zi-Jian Zhang"
+   ],
+   "venue": "Information",
+   "published": "2026-11-01",
+   "url": "https://www.semanticscholar.org/paper/e6fc52be1c44c4d79ce195515c4b00af0454f19a",
+   "pdf_url": "https://doi.org/10.3390/info17111089",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Text-to-SQL data synthesis must expand semantic coverage without losing the relational structure of observed queries. Existing SQL offers evidence of plausible join and nesting patterns, but reusing queries alone limits the range of training examples; unconstrained generation, in contrast, risks implausible structures and question–SQL mismatches. We introduce Structure-Constrained Data Synthesis (SCDS), which treats observed query structure as a prior and uses large language models (LLMs) to vary clause-level semantic content. SCDS groups source queries by coarse structural signatures and constructs semi-frozen SQL templates that retain the source FROM/JOIN context while abstracting selected clauses into semantic slots. It grounds intent generation in schema semantics and available values and represents the resulting objectives in a semi-structured intermediate representation. It then instantiates SQL, evaluates its executability diagnostically, and generates the corresponding questions and reasoning descriptions. On BIRD-dev, fine-tuning with the full set of 23,374 synthesized examples achieves a mean execution accuracy of 57.69% across three training seeds. On MaritimeSQLBench, fine-tuning with synthesized examples improves execution accuracy from 47.69% to 56.75% and reduces the execution error rate from 13.33% to 10.77%. The maritime result is measured with the gold schema elements required by each reference SQL. We publicly release MaritimeSQLBench to support further research on maritime Text-to-SQL. These results support structural priors as a useful constraint on Text-to-SQL synthesis. At a matched training size of 9428 examples, SCDS achieves performance comparable to BIRD-train; together with the maritime results, this highlights its potential for domain-specific Text-to-SQL data synthesis.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 6.0,
+    "transfer": 8.0,
+    "rigor": 6.0
+   },
+   "score": 7.15,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "结构约束的数据合成方法SCDS，保留JOIN结构变异语义内容，对团队空间SQL训练数据合成与MaritimeSQLBench领域适配思路高度相关。"
+  },
+  {
+   "uid": "arxiv:2611.04977",
+   "arxiv_id": "2611.04977",
+   "doi": "10.48550/arxiv.2611.04977",
+   "title": "GeoFaham: Domain-Specialized Multi-Agent Geospatial Analytics for Disaster Response",
+   "authors": [
+    "Muhammad Sohail Danish",
+    "Gilles Hacheme",
+    "Akram Zaytar",
+    "Satej Soman",
+    "Inbal Becker‐Reshef",
+    "Juan Lavista Ferres",
+    "Salman Khan",
+    "Girmaw Abebe Tadesse"
+   ],
+   "venue": "arXiv (Cornell University)",
+   "published": "2026-11-03",
+   "url": "https://arxiv.org/abs/2611.04977",
+   "pdf_url": "https://arxiv.org/pdf/2611.04977",
+   "sources": [
+    "OpenAlex"
+   ],
+   "abstract": "Real-world geospatial decision support requires more than single-step retrieval or code generation. Disaster-response questions often involve multi-source workflows that combine spatial databases, map-derived features, satellite imagery, raster products, and reusable geospatial artifacts, where correctness depends on preserving spatial scope, temporal context, and intermediate execution state. While large language models and coding agents offer a promising interface for such workflows, they struggle with geospatial-specific failure modes, including handling large artifacts, selecting the wrong evidence source, losing spatial or temporal metadata, and applying invalid geometric operations. We introduce GeoFaham, a domain-specialized multi-agent system for geospatial disaster analytics. GeoFaham decomposes workflows into specialist agents for vector operations, map feature retrieval, imagery discovery, and raster analysis, coordinated by an Orchestrator with a dual-ledger control loop for dependency-aware planning, progress tracking, validation, and replanning. To support artifact-centric collaboration, GeoFaham uses a Response Store that persists full geospatial outputs and typed metadata outside the LLM context window while agents exchange compact identifiers and summaries. We also introduce GeoFaham-Bench, a 40-task benchmark grounded in 17 real-world disaster records, designed to evaluate multi-step geospatial reasoning, cross-source integration, raster-vector computation, artifact generation, and recovery under non-rigid ground truth. We evaluate GeoFaham on GeoFaham-Bench against strong general-purpose coding-agent baselines, including Codex, Claude Code, and OpenCode. GeoFaham achieves the best overall performance, scoring 0.940 versus the next-best 0.879, while using 7.5 times fewer tokens. Our code and benchmark are publicly available at https://github.com/microsoft/GeoFaham.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 8.0,
+    "transfer": 7.0,
+    "rigor": 7.0
+   },
+   "score": 7.14,
+   "direction": "GIS Agent / 地理代码生成",
+   "one_liner": "多Agent地理空间分析系统，含矢量操作专用Agent、执行状态追踪与artifact管理，Agent化SQL生成和跨源推理可直接借鉴。"
+  },
+  {
+   "uid": "arxiv:2610.03524",
+   "arxiv_id": "2610.03524",
+   "doi": "10.18653/2026.emnlp-industry.42",
+   "title": "From Benchmarks to Production: A Text-to-SQL System for Complex Financial Data",
+   "authors": [
+    "Arijit Sehanobish",
+    "B. Coelho",
+    "Guillaume Michel",
+    "Sophia Zhi",
+    "Valerie Faucon-Morin",
+    "Kristen Howell"
+   ],
+   "venue": "Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing: Industry Track",
+   "published": "2026-10-02",
+   "url": "https://arxiv.org/abs/2610.03524",
+   "pdf_url": "https://arxiv.org/pdf/2610.03524",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "General-purpose Text-to-SQL systems achieve strong performance on academic benchmarks like Spider and BIRD, where schemas are relatively shallow and column values are often human readable. In production financial databases, where concepts are stored as opaque integer keys rather than human-readable strings, these methods fall below 50%, as even simple queries require multiple joins and filter predicates reference opaque IDs. We present Financial LINking Text-to-SQL (FLINT), a domain-specialized Text-to-SQL system that closes this gap through three key components: (1) a lookup agent that dynamically resolves natural-language concepts to question-specific reference table constraints, (2) embedding-based retrieval of structurally similar query templates from a compact, expert-authored bank, and (3) schema linking that prunes a large table schema to the relevant subset by traversing foreign-key chains, rather than relying on name similarity alone. We evaluate on two datasets totaling 359 questions over production financial schemas. FLINT outperforms various state-of-the-art baselines using the same LLM. The system is deployed in production as part of a financial data retrieval service.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 7.0,
+    "transfer": 8.0,
+    "rigor": 7.0
+   },
+   "score": 7.11,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "金融领域Text-to-SQL，外键链式schema linking和lookup agent对空间数据库中多表关联查询有参考价值。"
+  },
+  {
+   "uid": "arxiv:2611.02314",
+   "arxiv_id": "2611.02314",
+   "title": "GRIPS: An Empirical Study of Pre-SQL Grounding Information for SQL Generation",
+   "authors": [
+    "Ekata Mitra",
+    "Yu-Fei Tao",
+    "Kamalamalini Nagasundaram",
+    "Ameeta Agrawal"
+   ],
+   "venue": "",
+   "published": "2026-11-02",
+   "url": "https://arxiv.org/abs/2611.02314",
+   "pdf_url": "https://arxiv.org/pdf/2611.02314",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Text-to-SQL systems answer natural language questions over structured data, but can fail before SQL generation by linking question mentions to the wrong table, column, value, or relation. Even valid SQL can then return an incorrect answer. This raises a central question: What pre-SQL information helps a SQL generator, and when does additional information cease to help? We investigate this question on TempTabQA-C and BIRD. Among the audited SQL Static failures, grounding errors form the largest category on both benchmarks. We introduce GRIPS (Grounding Representation and Input Processing for SQL generation), a three-stage method that derives structured pre-SQL information to make these decisions explicit before query generation. Across GPT-5-nano and Llama-70B, GRIPS-Adaptive improves over SQL Static in 18 of 20 settings, with an average accuracy gain of 11.8 percentage points, while reducing model-call token usage by 47.8%. Our controlled analysis shows which grounding information can improve SQL generation, whereas adding more pre-SQL information does not consistently help. By separating question-input grounding from SQL generation, GRIPS makes text-to-SQL more accurate, efficient, and easier to diagnose.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 6.0,
+    "transfer": 8.0,
+    "rigor": 8.0
+   },
+   "score": 7.06,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": " grounding 失败分解清晰，可直接启发 PostGIS schema linking 的评测与纠错。"
+  },
+  {
+   "uid": "arxiv:2610.03625",
+   "arxiv_id": "2610.03625",
+   "doi": "10.18653/2026.akbc-1.6",
+   "title": "FALCON: A Model and Dataset Agnostic Framework for Synthetic Data Generation for NL2SQL Pairs",
+   "authors": [
+    "Darian Lee",
+    "Shannon Rumsey",
+    "J. St. Clair",
+    "Xin-Yi Tang",
+    "Aditya Bansal",
+    "Yuan-Ming Shi"
+   ],
+   "venue": "Conference on Automated Knowledge Base Construction",
+   "published": "2026-10-02",
+   "url": "https://arxiv.org/abs/2610.03625",
+   "pdf_url": "https://arxiv.org/pdf/2610.03625",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Relational databases are among the most widely deployed forms of structured knowledge, and natural language access to them requires grounding language onto schema entities and relations while handling the ambiguity inherent in how people phrase requests. Existing synthetic NL-to-SQL data generation methods largely ignore this ambiguity and produce oversimplified queries that fail to prepare models for the complexity of real-world structured knowledge access. We present FALCON, a framework that generates realistic, ambiguity-aware NL-to-SQL data matching the complexity of challenging real-world benchmarks, at low cost using compact open models. Our approach combines reserved-word SQL seeding and persona-based prompting to generate structurally complex queries, while alignment-based filtering preserves difficulty by distinguishing genuinely incorrect examples from complex but valid queries. Human evaluation confirms consistent high quality across model sizes, and our generated data exceeds existing benchmarks in both SQL complexity and natural language richness. Difficulty-stratified analysis shows models trained on FALCON data increasingly outperform baseline-trained models as query complexity increases, validating our pipeline's success in generating challenging training data. When combined with a small proportion of existing benchmark data, mixed training recovers performance on simpler queries while preserving these advantages on complex ones. The model- and database-agnostic design enables organizations to generate high-complexity NL-to-SQL training data locally without external APIs.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 6.0,
+    "transfer": 8.0,
+    "rigor": 7.0
+   },
+   "score": 6.91,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "面向NL2SQL的合成数据生成框架，ambiguity-aware设计和难度分层策略对构建空间SQL训练数据有直接借鉴价值。"
+  },
+  {
+   "uid": "arxiv:2610.22158",
+   "arxiv_id": "2610.22158",
+   "title": "PremiseSQL: Evaluating Premise Critique and Abstention in Text-to-SQL Systems",
+   "authors": [
+    "Shu-Xia Lin",
+    "Jin-Zhe Li",
+    "Chen-Lu Guo",
+    "Ya-Han Li",
+    "Yuan Wu",
+    "Yi Chang"
+   ],
+   "venue": "",
+   "published": "2026-10-15",
+   "url": "https://arxiv.org/abs/2610.22158",
+   "pdf_url": "https://arxiv.org/pdf/2610.22158",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Recent advances in large language models (LLMs) have substantially improved Text-to-SQL performance, yet existing NL2SQL systems largely assume that user queries are valid and answerable. As a result, models often generate executable SQL even for queries with flawed premises. We introduce premise critique ability in NL2SQL, namely the ability to recognize flawed queries and abstain from generating misleading SQL. To evaluate this capability, we propose PremiseSQL, a benchmark containing 1,800 flawed NL2SQL queries across four categories of premise failures, along with their 1,800 original queries. We further design an evaluation framework to measure intrinsic and prompt-induced premise-aware behavior across three prompting settings. Experiments on frontier LLMs show that current models are strongly premise-trusting by default and rarely critique flawed premises. Stronger critique-oriented prompting improves detection and abstention on flawed queries, but also increases false invalid judgments and suppresses SQL generation on originals. The code is available at https://github.com/vegeet/PremiseSQL.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 7.0,
+    "transfer": 7.0,
+    "rigor": 7.0
+   },
+   "score": 6.86,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "提出premise critique与abstention新维度，揭示LLM盲目信任用户前提的缺陷；对空间查询中错误地理前提的检测有直接启发。"
+  },
+  {
+   "uid": "doi:10.5281/zenodo.24052554",
+   "doi": "10.5281/zenodo.24052554",
+   "title": "DairySQL: Briefing large language models on dairy conventions supplies what they need to query a herd-management database",
+   "authors": [
+    "Seong‐Hun Lee",
+    "Wonjin Jung",
+    "Jaehwa Park"
+   ],
+   "venue": "Zenodo (CERN European Organization for Nuclear Research)",
+   "published": "2026-11-10",
+   "url": "https://doi.org/10.5281/zenodo.24052554",
+   "sources": [
+    "OpenAlex"
+   ],
+   "abstract": "Herd-management software records the yield, breeding, feeding and health of every cow, yet herd managers rarely know Structured Query Language (SQL). Large language models write SQL well on public benchmarks, but farm records follow dairy conventions the schema does not state, and nobody has measured which a model can find in the data and which it must be told. We measure this on DairySQL, 150 questions with validated reference SQL on a commercial farm's herd-management database, with three vendors' models at two reasoning levels, three runs each. Each question fixes its answer, and every model receives the same output conventions. We build a profiler that explores the stored data before any question and reads only what the data show, a short domain briefing from people who know the records, and briefed profiling, which gives the briefing to the profiler before it explores. With the schema alone the models answer 71% to 79% of the questions. The briefing adds 8 points, significantly in every setting. Profiling recovers most of that gain, but only for conventions that leave a trace in the data. A convention that leaves no trace reaches the queries only through briefed profiling, which is best in five of six settings. Vendor and reasoning level matter less. Without the 13 answer-shape conventions, accuracy falls by 26 to 29 points, mostly on format. A deployment therefore needs an unambiguous question and the dairy conventions, given to the model before it explores the data and checked in every query it writes.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 6.0,
+    "transfer": 8.0,
+    "rigor": 6.0
+   },
+   "score": 6.76,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "领域惯例（非schema显式声明）对Text-to-SQL的关键影响，profiling+briefing策略直接适用于PostGIS空间函数惯例的隐式知识注入。"
+  },
+  {
+   "uid": "arxiv:2610.24248",
+   "arxiv_id": "2610.24248",
+   "doi": "10.18653/2026.emnlp-main.2446",
+   "title": "Probing Ambiguity: Adversarial Intent Resolution for Robust Text-to-SQL",
+   "authors": [
+    "You-Bing Yin",
+    "Xu-Jun Peng",
+    "Muhammad Shahin Uddin",
+    "Erin Babinsky",
+    "Da-Ben Liu",
+    "Anoop Kumar"
+   ],
+   "venue": "Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing",
+   "published": "2026-10-16",
+   "url": "https://arxiv.org/abs/2610.24248",
+   "pdf_url": "https://arxiv.org/pdf/2610.24248",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Text-to-SQL systems typically assume a one-to-one mapping between natural-language queries and correct SQL translations. In practice, however, many queries are inherently ambiguous, admitting multiple valid interpretations that yield distinct outputs. We introduce Adversarial Intent Resolution (AIR), a multi-agent framework that actively probes and resolves such ambiguity without any task-specific training. AIR first constructs competing interpretations, verifies through SQL execution that they produce genuinely different results, and generates targeted clarification questions grounded in the observed data differences. Evaluating on leading benchmarks for ambiguous questions, AIR demonstrates strong performance, efficiency, and robust cross-benchmark transferability. On the AMBROSIA benchmark under schema-only context, a realistic production setting where exposing the full database is infeasible, AIR outperforms IntentRL, the state-of-the-art reinforcement learning model, across all metrics (e.g., F1 0.679 vs. 0.618). Crucially, AIR exhibits only ~7% performance degradation without the full database, compared to ~20% for IntentRL. On the AmbiQT benchmark, where ambiguity arises from schema design rather than linguistic structure, AIR achieves higher F1 under both context settings without any benchmark-specific adaptation.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 7.0,
+    "transfer": 6.0,
+    "rigor": 7.0
+   },
+   "score": 6.62,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "多 Agent 主动探测歧义并生成澄清问题，schema-only 场景下鲁棒性显著优于 RL 方法；意图消解与执行验证机制可借鉴到空间查询的拓扑歧义处理。"
+  },
+  {
+   "uid": "arxiv:2610.09396",
+   "arxiv_id": "2610.09396",
+   "title": "ARCS: Towards Precise Text-to-SQL via Structured Disambiguation",
+   "authors": [
+    "Yi-Hao Hu",
+    "Yan-Lin Feng",
+    "Naoki Otani",
+    "Nikita Bhutani"
+   ],
+   "venue": "",
+   "published": "2026-10-07",
+   "url": "https://arxiv.org/abs/2610.09396",
+   "pdf_url": "https://arxiv.org/pdf/2610.09396",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "As text-to-SQL systems move beyond demonstrations toward real-world deployment, ambiguity in user questions becomes a primary source of errors. Such ambiguities are often subtle, domain- or data-specific, and can silently cause system outputs to deviate from the user's true intent. Ambiguity is traditionally addressed through conversational clarification, which is often inefficient, cognitively demanding, and poorly aligned with real-world user workflows. We propose structured disambiguation, a new paradigm in which ambiguity is resolved through explicit, constrained interactions rather than free-form dialogue. We construct ARCS (Ambiguity Resolution Corpus for SQL), the first text-to-SQL benchmark featuring naturally occurring, unconstrained ambiguities over real-world databases, with complete annotations of all valid ambiguity points, interpretations, and SQL queries. Experimental results show that text-to-SQL remains challenging in the presence of ambiguity: gpt-6-sol achieves only 51% end-to-end execution accuracy, and no open-source model exceeds 27%.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 7.0,
+    "transfer": 6.0,
+    "rigor": 7.0
+   },
+   "score": 6.62,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "结构化消歧替代自由对话解决SQL歧义，ARCS基准首次标注真实歧义点；空间查询中拓扑语义歧义更严重，范式可迁移。"
+  }
+ ]
+}

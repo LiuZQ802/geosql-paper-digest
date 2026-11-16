@@ -1,0 +1,64 @@
+name: daily-digest
+
+on:
+  schedule:
+    - cron: "30 1 * * *"   # 每天 UTC 01:30 = 北京时间 09:30（arXiv 每日更新之后）
+  workflow_dispatch:        # 也可以在 Actions 页面手动运行
+  push:
+    branches: [main]
+    paths: ["web/**"]       # 只改了页面样式时，直接重新部署
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        if: github.event_name != 'push'
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          S2_API_KEY: ${{ secrets.S2_API_KEY }}
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+          TZ: Asia/Shanghai
+        run: python -m scholar.main
+
+      - name: Commit data
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/data state
+          git diff --cached --quiet || git commit -m "digest: $(TZ=Asia/Shanghai date +%F)"
+          git push
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

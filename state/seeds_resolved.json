@@ -1,0 +1,10 @@
+{
+ "Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs": "8f831f341e959955a495730d81996e62c57cc0bd",
+ "Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows": "ab649ecce8e85a7ac00e1cce9c1e4b605c1d8d0a",
+ "DIN-SQL: Decomposed In-Context Learning of Text-to-SQL with Self-Correction": "cc0f0cb09a73f82ed44d900f5ca710bec784acc1",
+ "CHESS: Contextual Harnessing for Efficient SQL Synthesis": "421f82e616d887ec008d88be580459edba96c271",
+ "OmniSQL: Synthesizing High-quality Text-to-SQL Data at Scale": "1e7f465f08bbc4b3e8a6b93b03b5c8547a6d333a",
+ "PostGISer: The first end-to-end fine-tuned large language model for PostGIS GeoSQL query generation": "bacea086be1f310148f1a6681eb5666a931b6fa4",
+ "GeoSQL-Eval: First Evaluation of LLMs on PostGIS-Based NL2GeoSQL Queries": "1b2455329f43e5bc49482f10cfd3fe3625401c94",
+ "CodeGEEnius: an interpretable reasoning large language model for GEE-based geospatial code generation via distillation": "25966b82d9b794ddd67463541b437e963b1d45e5"
+}

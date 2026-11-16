@@ -1,0 +1,16 @@
+{
+ "days": [
+  {
+   "date": "2026-11-15",
+   "deep": 5,
+   "skim": 12,
+   "top": [
+    "SPaRTA: Spatial Reasoning in Text-to-SQL for Omics Analysis",
+    "VCoT-SQL: Enhancing Text-to-SQL Generation through Dual Chain-of-Thought Validation Training",
+    "Why, Where, How: Taxonomy-guided Error Grounding for Code Repair in NL2SQL"
+   ],
+   "preview": false
+  }
+ ],
+ "updated_at": "2026-11-14T16:17:44+00:00"
+}
