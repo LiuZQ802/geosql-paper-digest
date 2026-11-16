@@ -1,6 +1,17 @@
 {
  "days": [
   {
+   "date": "2026-11-16",
+   "deep": 3,
+   "skim": 0,
+   "top": [
+    "LuthorSQL: A One-Pass Text-to-SQL Model as System 1 for a Slower LLM Agent",
+    "Bridge: Database-Grounded Interactive Disambiguation for Text-to-SQL",
+    "MEM-SQL: Memory-Empowered Text-to-SQL"
+   ],
+   "preview": false
+  },
+  {
    "date": "2026-11-15",
    "deep": 5,
    "skim": 12,
@@ -12,5 +23,5 @@
    "preview": false
   }
  ],
- "updated_at": "2026-11-14T16:17:44+00:00"
+ "updated_at": "2026-11-16T10:04:24+00:00"
 }
