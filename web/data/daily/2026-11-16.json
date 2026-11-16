@@ -1,0 +1,79 @@
+{
+ "date": "2026-11-16",
+ "generated_at": "2026-11-16T10:16:20+00:00",
+ "stats": {
+  "fetched": 370,
+  "unique": 321,
+  "unseen": 227,
+  "candidates": 3,
+  "scored": 3,
+  "deep": 0,
+  "skim": 2,
+  "seconds": 575,
+  "tokens": 2442,
+  "llm_calls": 1
+ },
+ "deep": [],
+ "skim": [
+  {
+   "uid": "arxiv:2611.18338",
+   "arxiv_id": "2611.18338",
+   "title": "MEM-SQL: Memory-Empowered Text-to-SQL",
+   "authors": [
+    "Xiaoqi Wang",
+    "Wenqi Pei",
+    "Shizheng Hou",
+    "Yilai Liu",
+    "Han Chen",
+    "Boyan Li",
+    "Yuyu Luo",
+    "Hongyang Du"
+   ],
+   "venue": "arXiv",
+   "published": "2026-11-13",
+   "url": "https://arxiv.org/abs/2611.18338",
+   "pdf_url": "https://arxiv.org/pdf/2611.18338",
+   "sources": [
+    "arXiv"
+   ],
+   "abstract": "Text-to-SQL systems translate natural language questions into SQL queries over increasingly complex databases. However, widely used benchmarks evaluate questions independently, overlooking settings where earlier queries over the same database can supply joins or calculations for a new question. We introduce HARE (History-AwaRe Text-to-SQL BEnchmark) to measure the accuracy and cost of adapting historical SQL. HARE comprises 1,600 requests derived from a fixed pool of 823 verified queries across four datasets. Annotations record which components each request preserves and which edits it requires, distinguishing whole-query adaptation from partial reuse. Our method, MEM-SQL (Memory-EMpowered Text-to-SQL), stores whole-query templates, reusable SQL blocks, and mappings from domain concepts to schema elements. MEM-SQL uses a layer only if every requirement assigned to it has a match above that layer's threshold. With On-demand Schema Linking (OSL), MEM-SQL consults the schema only when no layer qualifies or the generator judges retrieved evidence insufficient. Across six language models on HARE, mean execution accuracy rises from 37.1% for Direct Generation without history to 50.0% for MEM-SQL, with 76.6% fewer input tokens and 68.8% lower latency on average. Further analysis shows that requests reusing several verified queries remain a bottleneck, with accuracy falling from 56.7% to 29.7%, most sharply when reused components must be placed in a new query structure or combined with a shared join. Applying OSL to three other memory designs consistently reduces generation cost, while its accuracy benefit depends on the memory design. Verified history can thus make generation both more accurate and cheaper, but its value depends on the evidence retained and when the system consults the schema.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 6.0,
+    "transfer": 7.0,
+    "rigor": 6.0
+   },
+   "score": 6.52,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "提出历史SQL复用基准HARE与分层记忆机制MEM-SQL，OSL按需schema linking减少token消耗；多查询组合复用仍是瓶颈，对空间SQL的增量式session查询有借鉴价值。"
+  },
+  {
+   "uid": "arxiv:2611.17780",
+   "arxiv_id": "2611.17780",
+   "title": "LuthorSQL: A One-Pass Text-to-SQL Model as System 1 for a Slower LLM Agent",
+   "authors": [
+    "Ibrahim Memon",
+    "Armin Karamzade",
+    "M. Hanif Jhaveri",
+    "Roy Fox"
+   ],
+   "venue": "arXiv",
+   "published": "2026-11-13",
+   "url": "https://arxiv.org/abs/2611.17780",
+   "pdf_url": "https://arxiv.org/pdf/2611.17780",
+   "sources": [
+    "arXiv"
+   ],
+   "abstract": "Frontier LLM agents that query databases with tools are among the most accurate text-to-SQL systems, but per-query calls to a hosted model are slow, costly, and expose sensitive organizational queries to external APIs. For example, a Claude Opus 5.5 agent serving 10,000 queries a day costs over $70,000 a year at list price. To what extent can local hardware already owned by an organization offload this burden without compromising the agent's accuracy? We present LuthorSQL, a non-autoregressive 7B text-to-SQL model that serves as a rapid System 1 gate for a slower LLM agent (System 2), escalating queries only when uncertain. LuthorSQL makes a single forward pass to predict slot scores over a bounded grammar for query plans, compiles and runs up to 32 candidate plans, and chooses an answer using a trained validator. On its own, LuthorSQL reaches 68.03% execution accuracy on BIRD's hidden test set at 0.84 s per question on a single GPU, maintains its accuracy in 9 GB with 8-bit quantized weights, and transfers zero-shot to Snowflake, BigQuery, MySQL, PostgreSQL, and DuckDB within 3.1 points of its native SQLite accuracy. Combined with Claude Opus 5.5 in a pre-registered confidence cascade over 227 questions on databases published after Opus's training cutoff, LuthorSQL answers nearly half of all questions locally and cuts API cost by 33.3% at the same accuracy. Finally, contamination probing shows that Opus reproduces 48-92% of public benchmark gold queries verbatim without seeing the schema; however, its tool-assisted accuracy holds on renamed schemas and reaches 95.6-97.4% on post-cutoff databases. Code and data: https://github.com/IAMIbrahimmemon/luthorsql",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 5.0,
+    "transfer": 6.0,
+    "rigor": 7.0
+   },
+   "score": 6.22,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "7B非自回归模型做System 1快速过滤、不确定时 escalate 到LLM Agent，降低33% API成本；跨数据库零样本迁移有趣，但slot-filling语法对复杂PostGIS空间函数扩展性存疑。"
+  }
+ ]
+}
