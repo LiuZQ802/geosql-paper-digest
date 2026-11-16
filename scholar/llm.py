@@ -18,7 +18,22 @@ class LLM:
         if not self.key:
             raise SystemExit(f"缺少 API key：请设置环境变量 {cfg.get('api_key_env', 'LLM_API_KEY')}")
 
-    def chat_json(self, model, system, user, max_tokens=4000, temperature=0.2, retries=5):
+    def chat_json(self, model, system, user, max_tokens=4000, temperature=0.2, retries=None):
+        """model 可以是单个模型名，也可以是列表：按顺序尝试，前一个失败就换下一个。"""
+        models = [model] if isinstance(model, str) else list(model)
+        if retries is None:
+            retries = 5 if len(models) == 1 else 2
+        err = None
+        for m in models:
+            try:
+                return self._chat_once(m, system, user, max_tokens, temperature, retries)
+            except RuntimeError as e:
+                err = e
+                if m != models[-1]:
+                    log(f"model {m} unavailable, falling back to next model")
+        raise err
+
+    def _chat_once(self, model, system, user, max_tokens, temperature, retries):
         body = {
             "model": model, "temperature": temperature, "max_tokens": max_tokens,
             "response_format": {"type": "json_object"},
@@ -48,7 +63,7 @@ class LLM:
             except (ValueError, KeyError, RuntimeError) as e:
                 err = str(e)
                 time.sleep(3)
-        log("LLM call failed:", err)
+        log(f"LLM call failed ({model}):", err)
         raise RuntimeError(err)
 
 

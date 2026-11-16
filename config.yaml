@@ -115,8 +115,9 @@ llm:
   base_url: ""                  # 留空：从环境变量 LLM_BASE_URL 读取（GitHub 上存为 Secret，不公开）
   base_url_env: LLM_BASE_URL
   api_key_env: LLM_API_KEY      # 从环境变量读取 key，不要把 key 写在这里
-  score_model: kimi-k2.6          # 批量打分用（快、JSON 稳定）
-  digest_model: deepseek-v4-pro    # 精读解读用（长文理解强）
+  # 模型可写成列表：按顺序尝试，前一个在中转站上失败就自动换下一个
+  score_model: [kimi-k2.6, glm-5.3]          # 批量打分用（快、JSON 稳定）
+  digest_model: [deepseek-v4-pro, kimi-k2.6]  # 精读解读用（首选长文理解强的模型）
   score_batch_size: 8
   concurrency: 4                # 同时发起的 LLM 请求数
   max_candidates: 120           # 每天最多送多少篇给 LLM 打分（控制成本）
