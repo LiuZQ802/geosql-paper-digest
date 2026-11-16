@@ -111,7 +111,7 @@ def fetch_openalex(queries, since: dt.date, per_page=50):
                 pdf_url=best.get("pdf_url"),
                 sources=["OpenAlex"]))
         log(f"OpenAlex: {len(results)} hits for '{q}'")
-        time.sleep(0.5)
+        time.sleep(3)  # OpenAlex 对无 key 请求限流较严
     return out
 
 

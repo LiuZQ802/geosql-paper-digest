@@ -171,9 +171,14 @@ def main():
         with ThreadPoolExecutor(cfg["llm"].get("concurrency", 4)) as pool:
             for p, d in zip(deep, pool.map(lambda p: digest(llm, p, cfg), deep)):
                 p["digest"] = d
+        # 解读失败（多为接口临时故障）的论文不记为已读、不进今天的精读，明天自动重试
+        failed = {p["uid"] for p in deep if not p.get("digest")}
+        if failed:
+            log(f"digest failed for {len(failed)} paper(s), will retry next run")
+        deep = [p for p in deep if p["uid"] not in failed]
         # 已打过分的都记为已读，避免明天重复花钱
         for p in cands:
-            if "score" in p:
+            if "score" in p and p["uid"] not in failed:
                 seen.update(sources.seen_keys(p))
         write_json(STATE / "seen.json", sorted(seen))
         stats["scored"] = len(ranked)

@@ -18,7 +18,7 @@ class LLM:
         if not self.key:
             raise SystemExit(f"缺少 API key：请设置环境变量 {cfg.get('api_key_env', 'LLM_API_KEY')}")
 
-    def chat_json(self, model, system, user, max_tokens=4000, temperature=0.2, retries=3):
+    def chat_json(self, model, system, user, max_tokens=4000, temperature=0.2, retries=5):
         body = {
             "model": model, "temperature": temperature, "max_tokens": max_tokens,
             "response_format": {"type": "json_object"},
@@ -33,12 +33,12 @@ class LLM:
                     err = f"HTTP {r.status_code}: {r.text[:300]}"
                     if r.status_code in (400, 401, 402, 403, 404):
                         break  # 配置错误，重试无意义
-                    time.sleep(5 * (i + 1))
+                    time.sleep(15 * (i + 1))
                     continue
                 data = r.json()
                 if "choices" not in data:
                     err = str(data.get("error", data))[:300]
-                    time.sleep(5 * (i + 1))
+                    time.sleep(15 * (i + 1))
                     continue
                 u = data.get("usage") or {}
                 USAGE["prompt_tokens"] += u.get("prompt_tokens", 0)
