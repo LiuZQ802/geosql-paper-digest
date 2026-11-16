@@ -1,16 +1,16 @@
 {
  "date": "2026-11-16",
- "generated_at": "2026-11-16T10:16:20+00:00",
+ "generated_at": "2026-11-16T10:24:52+00:00",
  "stats": {
   "fetched": 370,
   "unique": 321,
-  "unseen": 227,
-  "candidates": 3,
-  "scored": 3,
+  "unseen": 225,
+  "candidates": 1,
+  "scored": 1,
   "deep": 0,
-  "skim": 2,
-  "seconds": 575,
-  "tokens": 2442,
+  "skim": 1,
+  "seconds": 55,
+  "tokens": 1405,
   "llm_calls": 1
  },
  "deep": [],
@@ -46,6 +46,34 @@
    "score": 6.52,
    "direction": "通用 Text-to-SQL 前沿",
    "one_liner": "提出历史SQL复用基准HARE与分层记忆机制MEM-SQL，OSL按需schema linking减少token消耗；多查询组合复用仍是瓶颈，对空间SQL的增量式session查询有借鉴价值。"
+  },
+  {
+   "uid": "arxiv:2611.17770",
+   "arxiv_id": "2611.17770",
+   "title": "Bridge: Database-Grounded Interactive Disambiguation for Text-to-SQL",
+   "authors": [
+    "Sau Lai Yip",
+    "Yue Pang",
+    "Shiwen Wu",
+    "Xiaofang Zhou"
+   ],
+   "venue": "arXiv",
+   "published": "2026-11-13",
+   "url": "https://arxiv.org/abs/2611.17770",
+   "pdf_url": "https://arxiv.org/pdf/2611.17770",
+   "sources": [
+    "arXiv"
+   ],
+   "abstract": "Ambiguity remains a persistent challenge in text-to-SQL, where an underspecified natural-language question may admit multiple plausible SQL interpretations. Recent work attempts to recover the user's intended interpretation through iterative clarification, but typically relies heavily on LLM parametric knowledge for ad hoc reasoning, leading to limited ambiguity-resolution effectiveness and high LLM cost. We further observe that many ambiguity errors stem from ambiguous column grounding, which remains poorly handled. Therefore, we propose Bridge, a database-grounded disambiguation framework built on an existing iterative protocol. Bridge supplies the LLM's ambiguity detection with offline-distilled knowledge about potential ambiguity relations among columns in the target database. Offline, Bridge constructs a Column Ambiguity Graph by first identifying potentially ambiguous column pairs using complementary database-grounded signals, followed by LLM-based verification. Online, columns and values mentioned in a previous incorrect SQL prediction are used as anchors to retrieve alternatives from the Column Ambiguity Graph and an offline-constructed value similarity index, respectively. The results are integrated for further pruning and consolidated for subsequent ambiguity detection. Extensive experiments on BIRD-dev without the benchmark-provided evidence show that, at comparable LLM cost, Bridge outperforms the strongest baseline by 11.60% in execution accuracy and improves the recall and precision of column usage in the final SQL by 5.25% and 12.37%, respectively.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 6.0,
+    "transfer": 7.0,
+    "rigor": 6.0
+   },
+   "score": 6.52,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "Bridge 通过离线构建列歧义图和价值相似索引来迭代消歧，核心创新是 schema linking 层面的歧义检测机制；PostGIS 中空间列（如 geom/location）的歧义消解可直接借鉴其列锚定与检索思路，但方法本身仍是迭代式交互框架的增量改进，未触及空间语义。"
   },
   {
    "uid": "arxiv:2611.17780",
