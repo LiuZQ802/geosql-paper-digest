@@ -1,0 +1,122 @@
+{
+ "date": "2026-11-17",
+ "generated_at": "2026-11-17T09:30:28+00:00",
+ "stats": {
+  "fetched": 366,
+  "unique": 315,
+  "unseen": 234,
+  "candidates": 5,
+  "scored": 5,
+  "deep": 1,
+  "skim": 1,
+  "seconds": 333,
+  "tokens": 19659,
+  "llm_calls": 2
+ },
+ "deep": [
+  {
+   "uid": "arxiv:2610.14777",
+   "arxiv_id": "2610.14777",
+   "title": "LYNX: Analytical Program Synthesis via Grounding and Closed-Loop Refinement",
+   "authors": [
+    "Rui-Chen Xia",
+    "Xiao-Chuan Han",
+    "Ding-Yu Yang",
+    "Lu-Wei Yang",
+    "Sai Wu",
+    "Dong-Xiang Zhang",
+    "Bin-Hui Yao",
+    "Gang Chen"
+   ],
+   "venue": "",
+   "published": "2026-10-10",
+   "url": "https://arxiv.org/abs/2610.14777",
+   "pdf_url": "https://arxiv.org/pdf/2610.14777",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "LLM-powered data analytics aims to translate natural language instructions into executable analytical programs over underlying data. However, existing approaches, whether treating LLMs as intent-to-code translators or as standalone analytical engines, often fail to reliably align domain semantics with complex schemas and heterogeneous metadata, resulting in brittle execution and semantically inconsistent analytical outputs in real-world workloads. We present LYNX, a multi-agent framework that formulates LLM-driven analytics as a schema- and knowledge-constrained analysis problem rather than a single-pass generation task. LYNX organizes analytical synthesis into a closed-loop workflow of planning, generation, verification, and refinement through three role-specialized agents that collaboratively enforce schema grounding, semantic consistency, and execution correctness. To address domain ambiguity and schema misalignment, LYNX integrates Semantic-Structural Distillation and Stage-Aware Allocation (SSD-SAA). A delta-guided iterative revision continuously diagnoses and repairs semantic and execution-level failures, substantially improving synthesis robustness. We evaluate LYNX on two NL-to-SQL benchmarks, BIRD-SQL Mini-Dev and the more challenging Spider 2.0-Lite. Experimental results demonstrate strong performance and efficiency, achieving 10.66% to 59.54% execution accuracy across lightweight and commercial models, while reducing token consumption by 70.53% compared with the prior most efficient method. Our framework displays high generalization over different backbones, from open-source, lightweight models to the latest commercial models. Additional case studies on quantitative finance analytics and complex multi-relational SQL workloads further demonstrate the framework's robustness, scalability, and practical applicability in real-world analytical scenarios.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 6.0,
+    "transfer": 8.0,
+    "rigor": 7.0
+   },
+   "score": 7.3,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "多智能体闭环规划-生成-验证-修正做NL2SQL，schema grounding与执行反馈纠错思路可直接迁移到PostGIS GeoSQL。",
+   "digest": {
+    "tldr": "LYNX 用 Generator-Critic-Reviser 三智能体闭环，把 NL2SQL 从单次生成变成“接地-诊断-修复-验证”流程，在 Spider 2.0-Lite 上达 51.13% EX。",
+    "problem": "现有 NL2SQL 方法无论是把 LLM 当翻译器还是当分析引擎，都难以可靠地把领域语义对齐到复杂 schema 和异构元数据上，导致执行脆弱、语义不一致。核心难点有二：一是领域与模式接地（C1），模型常出现错误的模式链接（schema linking）、幻觉属性、非法 join；二是执行可靠性与语义一致性（C2），即使语法正确也可能产出“可执行但错误”的程序。单次生成无法解决这两点，需要显式的知识分配和迭代验证。",
+    "method": [
+     "语义-结构蒸馏与阶段感知分配（SSD-SAA）：把接地知识拆成概念语义（Conceptual Semantics）和结构模式（Structural Schema）两路分别处理——前者用文档稠密检索加 Wikipedia 即时（Just-in-Time）扩展补足，后者把 DDL、JSON 元数据、列类型等归一化，并对同构表（如 366 张按日期分片的 ga_sessions_* 表）做压缩摘要，避免上下文冗余。",
+     "三阶段知识分配：不是把知识一股脑塞进 prompt，而是分解成“语义意图分析→模式接地→代码构造”三个子任务，分别注入 K*_sem、K*_struct、K*_syn（算子级语法规范），动机是“检索到不等于用得上”，让每类知识在最有用的阶段被消费。",
+     "Critic 的增量引导记忆管理：用 reflect-and-append 维护滚动错误历史 H_t = Reflect(H_{t-1}) ⊕ (Code_t + Error_t)，带时间衰减地压缩长时记忆；并通过比较相邻两轮错误 ΔE 区分“建设性进展”（错误性质改变，记录为有效修复模式）和“调试停滞”（错误等价，强制换发散路径）。",
+     "Reviser 的执行引导局部修复 + 意图级验证：把失败分为语法级、模式级、语义级三类，只修改导致失败的代码片段而非整体重写；执行通过后再用“橡皮鸭调试（Rubber Duck Debugging）”把程序反向翻译成结构化自然语言解释，与原始意图比对，缓解自评的确认偏差。",
+     "轻量回退机制：当外部检索内容触发安全过滤时，丢弃风险文本但保留 schema 与元数据上下文，使 Generator 降级而非完全失败。"
+    ],
+    "evidence": [
+     "Spider 2.0-Lite：DeepSeek-R1 骨干下 EX **51.13%**（Easy 68.00 / Medium 53.08 / Hard 35.92），超过 AutoLink 34.92%、RSL-SQL 30.53%；GPT-4o 骨干下 34.05%，远超 DAIL-SQL 5.68%、CHESS 3.84%；DeepSeek-V3 骨干下 35.45%±1.02，超过 LinkAlign 24.86%。",
+     "Token 效率：每任务仅 **11.2K–13.8K** tokens，对比 AutoLink 38.0K、RSL-SQL 50.0K，相对此前最高效方法降低 **70.53%**；原因是增量修复单候选而非候选探索。",
+     "BIRD-SQL Mini-Dev：DeepSeek-V3 下 EX **49.40%**、VES 45.44%、Soft-F1 56.31%；Qwen3-14B 下 EX 43.40%，超过基于 Llama3-70B 的 TA（42.80%）。",
+     "消融（DeepSeek-V3，Spider 2.0-Lite）：去掉 SSD-SAA 后 EX 几乎归零；去 Critic 降至 27.36%（-22.8%）；去迭代修复降至 22.43%（-36.7%）；去逻辑验证降至 30.23%（-14.7%）；Qwen3-14B 加迭代修复后 EX 从 4.96% 翻倍到 10.66%。"
+    ],
+    "value": "真正的新东西不是“多智能体”这个壳，而是两处细节：一是把接地知识按推理阶段分配（SSD-SAA），并有同构表压缩这种很工程化但实用的 schema 摘要；二是 Critic 的增量（delta）诊断——用错误状态的变化判断修复是否有效、何时该换路径，这比单纯堆积错误日志（如多数 Reflexion 式方法）更有信息量，也是其 token 效率的关键来源。在 NL2SQL 领域它属于“agent + 执行反馈”这条线的 SOTA 级工程集成，方法本身没有理论突破，但把 schema 接地、迭代修复、语义验证串成了一个可复用的完整闭环。",
+    "inspiration": [
+     "你们的 PostGIS benchmark 里可以专门加一类“同构/多表 schema 压缩”题型：比如上百张按区域或时间分片的空间表（roads_2020、roads_2021…），检验模型能否在元数据被压缩后仍正确选择 ST_Intersects 等函数并写出正确 join。LYNX 的同构表合并策略可直接借鉴到你们 schema 序列化模块。",
+     "Critic 的 delta 诊断思路非常适用于空间 SQL 纠错：PostGIS 报错常分两类——SRID 不匹配、几何类型不匹配、单位错误等“错误性质变了”说明修复有效；若多轮都是同一个 SRID 错误，说明模型陷入死路，应强制换策略（比如从 ST_Distance 换 ST_DWithin 或显式 ST_Transform）。可以在你们的微调模型外挂一个这样的诊断器做推理时增强。",
+     "“橡皮鸭调试”意图级验证可以用在空间查询上：让模型把 SQL 反向解释成自然语言（“我筛选了距市中心 5 公里内的点，缓冲区用的 4326 度单位”），再和原问题比对，专门抓“可执行但单位/CRS 错”的假阳性——这正是你们关心的坐标系与距离/面积单位问题，且比纯执行反馈能发现更多错误。",
+     "Stage-aware allocation 的分阶段注入（意图→schema→算子）可以直接改造你们 PostGISer 的 prompt/上下文组织：把 ST_* 函数的参数语义（如 geography vs geometry、SRID 默认值）作为 K*_syn 放在代码构造阶段注入，而不是在开头一次性给出，可能比现在的做法更稳。",
+     "其 Wikipedia 即时语义扩展（JIT expansion）对地理领域术语（如“美国社区调查”“疫苗点”）很有用，但地理数据更依赖权威 gazetteer/地名库，可以考虑把 Wiki 替换成 OSM/GeoNames 检索，作为你们数据合成时生成领域语义上下文的来源。"
+    ],
+    "limitations": [
+     "数据规模偏小且只是“Mini-Dev/Lite”子集：BIRD 500 条、Spider 2.0-Lite 547 条（且 sf009/sf013/sf029 数据库不可用），与完整 Spider 2.0 相比代表性有限，51.13% 的绝对水平说明复杂查询仍有大量失败。",
+     "实验公平性有疑点：Spider 2.0-Lite 的 baseline 数字直接取自原文/官方发布，未在同一框架、同一 token 预算下重跑；且各 baseline 未必都在最优 prompt 配置下，token 对比（11.2K vs 50K）口径是“LYNX 到通过验证为止”，不完全对等。",
+     "消融中“去掉 SSD-SAA 后 EX≈0”把 schema 信息几乎全拿掉了，这个降幅更像是“没给 schema”而非“没用分配机制”，无法区分 SSD-SAA 的分阶段分配与简单 schema 序列化之间的差异；另外语义接地在 BIRD hard 子集上 EX 反而 -1.96，被轻描淡写。"
+    ],
+    "verdict": "worth_reading",
+    "verdict_reason": "方法集成扎实、delta 诊断与阶段化知识分配对你们的 PostGIS 空间 SQL 纠错和上下文组织有直接可移植的启发，但缺少空间/地理特有任务验证，且实验对比口径不够严谨。",
+    "tags": [
+     "多智能体",
+     "执行反馈纠错",
+     "schema linking",
+     "知识接地",
+     "NL2SQL",
+     "token 效率"
+    ],
+    "fulltext_source": "arXiv HTML"
+   }
+  }
+ ],
+ "skim": [
+  {
+   "uid": "arxiv:2611.20976",
+   "arxiv_id": "2611.20976",
+   "title": "Living Context Graphs: Continual Semantic Learning for Enterprise Data Reasoning",
+   "authors": [
+    "Varun Agrawal",
+    "Ayush Srivastava",
+    "Eshan Gujar",
+    "Kaushal Kumar",
+    "Ayush Gupta"
+   ],
+   "venue": "arXiv · the NeurIPS 2026 Workshop on Continual Learning in the Era o",
+   "published": "2026-11-16",
+   "url": "https://arxiv.org/abs/2611.20976",
+   "pdf_url": "https://arxiv.org/pdf/2611.20976",
+   "sources": [
+    "arXiv"
+   ],
+   "abstract": "Enterprise AI can now perform analytics, reporting, and data-driven workflows, yet the data foundations it relies on remain hard to operationalize: business meaning, relationships, metric definitions, and reporting conventions are absent from database schemas and scattered across undocumented systems and tribal knowledge. We introduce the Living Context Graph (LCG), a continually learned context layer that makes existing enterprise data operational for AI without requiring a copy or transformation of the underlying warehouse. LCG bootstraps base semantics and relationships from the data itself, builds a concept graph that indexes business context as queries are served, writes durable semantic learnings from verified outcomes, and withdraws or re-earns context when later outcomes contradict prior routes. We evaluate LCG through text-to-SQL, a core data-reasoning task, on a transfer-aware split of three BIRD databases comprising 499 questions: 353 form the learning history and 146 are held out and never used to update the context layer. Bootstrapping alone improves overall accuracy by +4.6 percentage points. Learning only from the history raises accuracy on the untouched held-out transfer set by +22.6 points (95% CI [+14.4, +30.8]), exceeding five-shot retrieval from the same history by +12.3 points. Incremental learning reaches the one-shot endpoint within observed evaluation noise on every database. Ablating the graph changes held-out accuracy by at most one question per database but increases per-query cost 2.3-3.3x and median latency 1.8-3.4x: continually learned semantics drive accuracy, while the graph makes that context efficient to serve.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 6.0,
+    "transfer": 6.0,
+    "rigor": 7.0
+   },
+   "score": 6.42,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "持续学习语义上下文层提升BIRD文本转SQL，思路可迁移到空间schema linking与领域语义注入，但未涉地理空间。"
+  }
+ ]
+}

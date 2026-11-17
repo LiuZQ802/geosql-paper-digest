@@ -1,6 +1,15 @@
 {
  "days": [
   {
+   "date": "2026-11-17",
+   "deep": 1,
+   "skim": 1,
+   "top": [
+    "LYNX: Analytical Program Synthesis via Grounding and Closed-Loop Refinement"
+   ],
+   "preview": false
+  },
+  {
    "date": "2026-11-16",
    "deep": 0,
    "skim": 3,
@@ -19,5 +28,5 @@
    "preview": false
   }
  ],
- "updated_at": "2026-11-16T10:24:52+00:00"
+ "updated_at": "2026-11-17T09:30:28+00:00"
 }
