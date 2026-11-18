@@ -1,6 +1,15 @@
 {
  "days": [
   {
+   "date": "2026-11-18",
+   "deep": 1,
+   "skim": 2,
+   "top": [
+    "Adaptive-Elbow Graph Traversal for Schema Retrieval in Text-to-SQL"
+   ],
+   "preview": false
+  },
+  {
    "date": "2026-11-17",
    "deep": 1,
    "skim": 1,
@@ -28,5 +37,5 @@
    "preview": false
   }
  ],
- "updated_at": "2026-11-17T09:30:28+00:00"
+ "updated_at": "2026-11-18T08:52:22+00:00"
 }

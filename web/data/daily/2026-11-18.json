@@ -1,0 +1,149 @@
+{
+ "date": "2026-11-18",
+ "generated_at": "2026-11-18T08:52:22+00:00",
+ "stats": {
+  "fetched": 359,
+  "unique": 310,
+  "unseen": 236,
+  "candidates": 12,
+  "scored": 12,
+  "deep": 1,
+  "skim": 2,
+  "seconds": 544,
+  "tokens": 21207,
+  "llm_calls": 3
+ },
+ "deep": [
+  {
+   "uid": "arxiv:2611.20979",
+   "arxiv_id": "2611.20979",
+   "title": "Adaptive-Elbow Graph Traversal for Schema Retrieval in Text-to-SQL",
+   "authors": [
+    "Fabio Picariello",
+    "Salvatore Cipolla",
+    "S. Bonura",
+    "V. Morreale"
+   ],
+   "venue": "",
+   "published": "2026-11-16",
+   "url": "https://arxiv.org/abs/2611.20979",
+   "pdf_url": "https://arxiv.org/pdf/2611.20979",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "LLM-based natural-language interfaces to relational databases are gated by a schema-retrieval step: the generator can only be as good as the slice of schema it is shown. On a database with hundreds of tables, that slice must be selected and the selection is two-sided---omit a needed table and the query becomes unrecoverable, include too many and the irrelevant ones act as noise that degrades the model's output. When an agentic retriever that lets the model inspect the schema can be too costly or too slow, the fallback is an embedder that ranks tables by cosine similarity and keeps a top-k. This fallback has two weaknesses: a fixed budget is suboptimal question by question, and embedding similarity overlooks foreign-key-linked tables that are necessary for joins. We present Adaptive-Elbow Graph Traversal (AEGT, ElbowHop for short), a property-graph table retriever that addresses both: an adaptive elbow cutoff replaces the fixed budget with a per-question one under a single aggressiveness parameter, and bidirectional foreign-key traversal deterministically recovers the bridge tables embedding similarity misses. We evaluate the retriever on 3 corpora of increasing candidate-pool size (BIRD Mini-Dev queried per database, 3--13 tables; its eleven schemas merged, 74; and a merged Spider-train graph, 546) and isolate the two mechanisms under a per-question budget-matched protocol. Across these settings the adaptive elbow emerges as the dominant mechanism---at matched recall it roughly doubles precision over a fixed budget on the larger pools, the margin widening as the pool grows---while the foreign-key traversal pays off on the join-critical bridge tables dense retrieval cannot reach, in the single-hop tight-budget case. We characterize the method as a low-cost, recall-robust first stage for schema retrieval on which a downstream selection or generation step can build.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 7.0,
+    "transfer": 8.0,
+    "rigor": 6.0
+   },
+   "score": 7.35,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "自适应肘部截断+外键图遍历做schema检索，直接解决大库schema linking难题，方法可迁移至空间数据库多表join场景。",
+   "digest": {
+    "tldr": "提出ElbowHop，用自适应肘部截断替代固定top-k做表级模式检索，配合双向外键遍历恢复桥接表；在74/546表的大池上，匹配召回时精度提升约1倍。",
+    "problem": "Text-to-SQL的schema retrieval需在数百张表中选出相关子集：漏掉必要表则查询不可恢复，纳入过多则噪声降低生成质量。现有嵌入检索的固定top-k预算无法按问题自适应调整，且忽略外键连接的桥接表（如order_items），导致join路径断裂。",
+    "method": [
+     "自适应肘部截断（adaptive elbow）：扩展Kneedle算法，通过单一攻击性参数α控制每问题的动态预算，用双宽度平滑+弦距最大点检测肘部位置，再以α缩放调节召回-精度权衡",
+     "双向外键遍历：在PostgreSQL存储的属性图（Table/Column节点，HAS_COLUMN/REFERENCES边）上，对初始种子集进行t_hop轮双向外键扩展，确定性恢复语义不相似但结构必需的桥接表",
+     "属性图统一存储：表和列作为类型化节点，嵌入与图结构共享同一存储，使语义检索和图遍历无缝衔接",
+     "严格预算匹配协议：ElbowHop-fixed k（固定种子+FK遍历）与Dense（纯cosine同预算）逐问题匹配总表数，隔离FK遍历的纯结构贡献"
+    ],
+    "evidence": [
+     "BIRD merged（74表）α=0.6、t_hop=1时，ElbowHop达97%召回/36.9%精度，固定预算仅97%召回/25.6%精度；Spider merged（546表）同等设置下精度从7.0%提升至14.3%（匹配召回时约翻倍），且池越大优势越显著",
+     "FK遍历的桥接表召回增益：在紧预算（小α）时BIRD池+15点，Spider池+6-7点；但α=0.6默认点仅+2-8点，且第二跳增益≈0，说明单跳已饱和",
+     "肘部种子k_seed的绝对偏差随池增长：0.4→1.7→4.7表（CV: 0.48→0.52→0.79），固定预算与肘部分歧比例达20%/80%→40%/60%→39%/61%",
+     "k_seed与gold表数相关性极弱（ρ≈0.05-0.16），说明肘部检测的是相似度曲线形状而非答案复杂度"
+    ],
+    "value": "首次将自适应肘部检测引入Text-to-SQL的表级检索，以单一参数α替代固定k；明确量化了两种机制的分工——肘部主导大池精度提升，FK遍历补偿紧预算下的桥接表召回。作为低成本首阶段检索器，为下游agentic选择器或生成器提供更干净的输入，与MAC-SQL/CHESS/CHASE-SQL等系统的嵌入检索模块直接对标。",
+    "inspiration": [
+     "在GeoSQL-Eval benchmark中增加'大池跨库检索'场景：将多个PostGIS数据库合并为单一图（类似BIRD merged→Spider merged的扩展轴），检验空间表检索在百表规模下的肘部行为，因空间数据库常含大量辅助表（如CRS定义表、空间索引表、元数据表）",
+     "微调数据合成策略：借鉴ElbowHop的α参数思想，在PostGISer的数据生成中引入'问题复杂度-预算匹配'机制，对简单空间查询（单表ST_Within）分配紧凑schema上下文，对复杂多步空间分析（需多次ST_Union+ST_Buffer+join）自动扩展相关表",
+     "桥接表问题对PostGIS尤为关键：空间join常需中间表（如空间分区网格表、空间关系映射表）连接两个语义端点表，可在PostGISer的schema graph中显式建模REFERENCES边，并评估FK遍历对ST_*函数依赖路径的恢复效果",
+     "执行反馈纠错环节：将肘部检测的相似度曲线形状作为诊断信号——若s_0-s_{n-1}过小或最大弦距过小，触发保守fallback或LLM重试，这与你们基于执行反馈的SQL纠错流程可衔接",
+     "评测指标扩展：当前GeoSQL-Eval的表级召回未区分'内容表'与'桥接表'，建议增加桥接表专项召回指标，因空间查询中纯拓扑连接表（如行政区划层级映射）常被嵌入检索遗漏"
+    ],
+    "limitations": [
+     "端到端SQL生成准确率未验证：仅评估表级召回/精度，未证明更高表级精度必然转化为更高执行准确率（作者明确承认并列为未来工作）",
+     "肘部检测的可靠性假设：需相似度曲线存在明显膝部，短列表或平坦分布时可能退化至返回全部候选；文中未量化此类失败频率，且多局部极大值的处理保守（取最早）缺乏理论保证",
+     "FK遍历的聚合增益有限：默认α=0.6时仅+2-8点召回，且第二跳几乎无增益；其核心价值集中在桥接表子集，对整体池的统计影响被稀释"
+    ],
+    "verdict": "worth_reading",
+    "verdict_reason": "方法简洁实用、实验控制严谨（预算匹配协议），但核心创新（自适应肘部）对已有PostGISer/GeoSQL-Eval体系的直接增量有限，更适合作为schema retrieval模块的优化参考而非范式突破。",
+    "tags": [
+     "schema linking",
+     "adaptive retrieval",
+     "graph traversal",
+     "Text-to-SQL",
+     "BIRD",
+     "Spider"
+    ],
+    "fulltext_source": "arXiv HTML"
+   }
+  }
+ ],
+ "skim": [
+  {
+   "uid": "arxiv:2611.22333",
+   "arxiv_id": "2611.22333",
+   "title": "MoL-SQL: A Controlled Benchmark for Mixture-of-Language Text-to-SQL",
+   "authors": [
+    "Tianqi Luo",
+    "Boyan Li",
+    "Yuyu Luo"
+   ],
+   "venue": "arXiv",
+   "published": "2026-11-17",
+   "url": "https://arxiv.org/abs/2611.22333",
+   "pdf_url": "https://arxiv.org/pdf/2611.22333",
+   "sources": [
+    "arXiv"
+   ],
+   "abstract": "Text-to-SQL systems are usually built and evaluated under a monolingual assumption, yet in international applications users often query databases stored in a different language. Existing multilingual benchmarks mostly translate only the question without aligning schema and value entities, so they can neither locate the source of an accuracy drop nor rule out translation errors. Hence, we introduce MoL-SQL, a benchmark for mixture-of-language Text-to-SQL that switches the languages of the question, schema, and stored values independently while keeping each task fixed, and grades every cross-lingual entity mapping into four difficulty levels. We migrate five Text-to-SQL benchmarks of different domains and source languages through a unified alignment pipeline that builds a shared cross-lingual entity map, migrates each database with its constraints, rewrites the gold SQL under execution-equivalence checks, and regenerates the question from the verified SQL, keeping all language versions of a task aligned in entities, intent, and execution result. MoL-SQL provides two splits: MoL-Full (16,892 samples) for overall evaluation and MoL-Cube (3,840 samples) covering every language combination to isolate question, schema, and value effects. Experiments with eight LLMs and four families of Text-to-SQL methods show that schema and value languages have distinct effects, with stored values costing up to 23 points, and that these effects mainly stem from cross-lingual entity mapping. Neither question translation nor additional reasoning narrows the value gap, whereas access to target-database values substantially reduces it, indicating that mixture-of-language Text-to-SQL benefits most from language-aware context grounding.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 7.0,
+    "transfer": 6.0,
+    "rigor": 7.0
+   },
+   "score": 6.62,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "混合语言Text-to-SQL可控基准，拆解问题/schema/值三因素，对构建多语言空间SQL评测有方法论参考。"
+  },
+  {
+   "uid": "doi:10.48550/arxiv.2611.17267",
+   "arxiv_id": "2611.17267",
+   "doi": "10.48550/arxiv.2611.17267",
+   "title": "LiveGeo: Benchmarking Geographic Agents in Continuously Evolving Worlds",
+   "authors": [
+    "Pengcheng Zhou",
+    "Xuanyu Liu",
+    "Yanchen Yin",
+    "Tianjie Ju",
+    "Bobo Li",
+    "Shengqiong Wu",
+    "Hao Fei",
+    "Mong-Li Lee",
+    "Wynne Hsu"
+   ],
+   "venue": "arXiv (Cornell University)",
+   "published": "2026-11-12",
+   "url": "https://doi.org/10.48550/arxiv.2611.17267",
+   "pdf_url": "https://arxiv.org/pdf/2611.17267",
+   "sources": [
+    "OpenAlex"
+   ],
+   "abstract": "We introduce GeoWorld, a controllable and continuously evolving geographic environment platform for LLM agents, and LiveGeo, a benchmark for evaluating reliable decision-making in real-world geographic environments using GeoWorld. Unlike existing evaluations that largely reason and plan over fixed geographic states, GeoWorld is grounded in real-world geographic structure and allows external world states to evolve along their own temporal processes while preserving verifiable state histories. LiveGeo places geographic tasks within this evolving environment, requiring agents to actively acquire task-relevant information, verify whether the evidence supporting prior decisions remains valid, and revise their plans when necessary. Our results reveal that even frontier LLMs struggle with static tasks, with no model consistently excelling across tasks, while strong static performance does not ensure dynamic reliability. Further analysis identifies a key bottleneck: agents struggle to acquire and translate relevant evidence into valid decisions and maintain their correctness as the world evolves. By releasing LiveGeo together with its GeoWorld platform, we aim to provide the community with a flexible and extensible infrastructure for studying the next generation of agents capable of reliable action in evolving geographic worlds.",
+   "scores": {
+    "relevance": 6.0,
+    "novelty": 7.0,
+    "transfer": 5.0,
+    "rigor": 6.0
+   },
+   "score": 5.59,
+   "direction": "GIS Agent / 地理代码生成",
+   "one_liner": "提出可演化地理环境GeoWorld与动态Agent基准LiveGeo，其状态校验思想可用于设计带执行反馈的SQL评测。"
+  }
+ ]
+}
