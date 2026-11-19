@@ -1,0 +1,149 @@
+{
+ "date": "2026-11-19",
+ "generated_at": "2026-11-19T09:06:28+00:00",
+ "stats": {
+  "fetched": 346,
+  "unique": 299,
+  "unseen": 224,
+  "candidates": 11,
+  "scored": 11,
+  "deep": 2,
+  "skim": 0,
+  "seconds": 486,
+  "tokens": 32974,
+  "llm_calls": 4
+ },
+ "deep": [
+  {
+   "uid": "doi:10.7939/86057",
+   "doi": "10.7939/86057",
+   "title": "Reasoning Across Relational Schemas with Large Language Models",
+   "authors": [
+    "Mohammadreza Daviran"
+   ],
+   "venue": "ERA: Education and Research Archive (University of Alberta)",
+   "published": "2026-11-17",
+   "url": "https://doi.org/10.7939/86057",
+   "sources": [
+    "OpenAlex"
+   ],
+   "abstract": "Relational databases underpin modern information systems, yet real-world data environments are increasingly heterogeneous, distributed, and fragmented across schemas with differing structures, naming conventions, and semantics. Although large language models (LLMs) have shown strong performance in tasks such as Text-to-SQL generation and schema understanding, their ability to reason across multiple relational schemas remains poorly understood. This thesis investigates cross-schema relational reasoning in LLMs through three connected problems: cross-schema SQL query mapping, analysis of factors affecting mapping success, and schema reconstruction from fragmented databases. First, the thesis presents SQL-Exchange, a framework for transforming SQL queries across heterogeneous schemas while preserving source-query structure. Using schema-aware prompting, template-guided abstraction, and target-grounded value substitution, the framework enables structure-preserving query transfer across semantically different domains. Experiments show that LLMs can generate executable and semantically meaningful mappings, which further improve downstream Text-to-SQL performance, especially in low-resource settings. Second, the thesis analyzes why cross-schema SQL mappings succeed or fail. Using over 100,000 generated mappings, it examines the effects of query complexity, schema feasibility, and mapping flexibility on execution validity, semantic correctness, and structural preservation. Results indicate that complex query structures, schema incompatibilities, and ambiguous mappings significantly reduce performance, exposing key limitations of current LLMs under schema shift. Finally, the thesis studies whether LLMs can reconstruct coherent global schemas from fragmented local schemas in data integration scenarios. It introduces a benchmark for global schema construction based on real-world schemas subjected to controlled transformations, including naming drift, schema fragmentation, and removal of cross-source foreign keys. A deterministic evaluation framework measures executability, attribute recovery, and data reconstruction quality. Results show that even state-of-the-art reasoning LLMs struggle to recover globally consistent relational structures under high ambiguity and limited relational visibility. Overall, this thesis advances the study of schema-level reasoning in LLMs by introducing new methods, analyses, and benchmarks for relational reasoning across heterogeneous databases. The findings reveal both the promise and current limitations of LLMs in understanding, transferring, and reconstructing relational structure.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 6.0,
+    "transfer": 8.0,
+    "rigor": 6.0
+   },
+   "score": 7.15,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "该论文系统研究跨异构 schema 的 SQL 映射与重构，在 10 万级映射上分析失败因素；schema linking 思路可直接迁移到 PostGIS 多源库场景。",
+   "digest": {
+    "tldr": "研究 LLM 跨异构关系模式的推理：提出保结构的跨库 SQL 迁移框架 SQL-Exchange，分析 10 万余条映射的成败因素，并构建模式重建基准，发现模型仍难恢复全局一致结构。",
+    "problem": "现实中的关系数据库越来越异构、分散：不同库的结构、命名习惯和语义都不一样，而现有 LLM 的 Text-to-SQL 与模式理解能力基本是在单一固定模式（schema）上评测的。当问题要从一个模式迁移到另一个模式，或需要把多个碎片化模式拼成全局视图时，模型到底行不行，几乎没人系统研究过。这个问题重要，因为跨库迁移和模式重建正是数据集成、低资源场景落地的瓶颈。（仅基于摘要）",
+    "method": [
+     "SQL-Exchange 框架：把一条源库 SQL 迁移到语义不同但结构可对应的目标模式上，并且刻意保持源查询的结构不变（structure-preserving），而不是重新生成一条功能等价但结构不同的 SQL——这样可以单独考察模型的结构迁移能力而非普通的 SQL 重写。",
+     "三个关键组件：模式感知提示（schema-aware prompting）、模板引导的抽象（template-guided abstraction）、目标侧接地值替换（target-grounded value substitution）。前者让模型看到目标模式信息，中者把源查询抽成带槽位的模板以剥离模式特有细节，后者把字面量/属性名替换为目标库中真实存在的值，从而避免幻觉。",
+     "成败因素分析：用 10 万余条生成的映射做统计分析，自变量是查询复杂度、模式可行性（schema feasibility）、映射灵活性（mapping flexibility），因变量是执行有效性（execution validity）、语义正确性（semantic correctness）、结构保持度（structural preservation），相当于给跨模式迁移做了一张失效归因表。",
+     "全局模式重建基准：以真实模式为底，施加受控变换——命名漂移（naming drift）、模式碎片化、删除跨源外键——构造“只有局部碎片”的输入，要求模型重建一致的全局关系结构。",
+     "确定性评测框架：围绕可执行性、属性恢复率、数据重建质量三个维度打分，避免用 LLM 当裁判带来的不确定性。（仅基于摘要，具体实现细节文中未说明）"
+    ],
+    "evidence": [
+     "SQL-Exchange 实验显示，LLM 能够生成可执行且语义有意义的跨库映射，并且这些映射还能反过来提升下游 Text-to-SQL 的性能，低资源（low-resource）设置下提升尤其明显——但摘要未给出具体数据集、模型和提升数值，文中未说明。",
+     "基于超过 100,000 条生成映射的分析结论：复杂查询结构、模式之间不兼容、映射本身有歧义，都会显著拉低执行有效性与语义正确性，说明现有 LLM 在模式漂移（schema shift）下存在系统性失效。",
+     "全局模式重建基准上，即使是当前最先进的推理型 LLM，在高歧义、关系可见性受限的条件下也难以恢复全局一致的关系结构——摘要未给出具体通过率或对比数字，文中未说明。"
+    ],
+    "value": "真正的新东西是把“模式（schema）”本身当作推理对象，而不是当成提示里的背景文本：一条线做跨模式结构迁移，一条线做迁移失败的定量归因，第三条线做碎片模式重建的基准。对 NL2Text-to-SQL 社区来说，它把评测焦点从“同一模式内的 SQL 正确率”推进到“换一个模式还对不对”，这与模式链接（schema linking）和跨库泛化问题直接对接。作为一篇博士论文，它的贡献偏“问题定义 + 基准 + 分析”，方法新颖度中等，但视角对后续工作有指引价值。（仅基于摘要）",
+    "inspiration": [
+     "在 GeoSQL-Eval 里加一个“模式漂移（schema shift）”子集：同一条自然语言问题，把底层 PostGIS 模式做受控改写——几何列 geom / the_geom / shape 互换、表名列名换成同义但不同的命名、CRS 编码列改写法、空间索引与字段顺序打乱——然后测同一模型是“生成”还是“迁移”更稳。这能直接回答你们关心的问题：微调后的 PostGISer 学到的是空间语义还是模式记忆。",
+     "借鉴它的映射失败归因法：把空间 SQL 的错误拆成执行有效性、语义正确性、结构保持度三个正交指标，再按“涉及 ST_* 函数个数、是否跨 CRS、空间关系是否可歧义（touches vs intersects vs within）、是否含子查询/窗口”分组统计。你们现在多半只报执行准确率，加上这层归因能定位到是坐标系/单位类题目拖后腿，还是拓扑语义类题目拖后腿。",
+     "把它的“模板引导抽象 + 目标侧值替换”直接搬来做微调数据合成：把已有的 PostGIS SQL 抽象成带槽位的空间模板（表槽、几何列槽、ST_ 函数槽、距离/面积字面量与单位槽、SRID 槽），再接地到新构造的假模式上，就能批量造出跨模式训练对。这对 PostGISer 泛化到未见过的库、缓解对具体表名的过拟合很有用，成本远低于人工标注。",
+     "它的“删除跨源外键”设定可以做一个空间版：给定若干碎片化的图层（无显式连接键），让模型从空间关系推断连接条件（如 ST_Intersects / ST_Contains / ST_Within 推断外键），再重建全局空间模式。这是标准 Text-to-SQL 社区不会做、而你们天然有优势的题目，适合作为下一篇 benchmark/方法的切入点。",
+     "低资源迁移提升这一点值得追：如果跨库映射数据能提升下游 Text-to-SQL，那你们可以试“用 GEE/其它矢量库的代码-问题对，迁移到 PostGIS 模式上”做跨域增广，检验 CodeGEEnius 的蒸馏思路能否复用到 SQL 侧。"
+    ],
+    "limitations": [
+     "本次解读仅基于摘要，全文未获取：数据集名称、基线模型、具体指标数值、消融结果全部缺失，所有“提升”“显著降低”的说法都无法核验强度，不能作为可复现的依据。",
+     "“保结构的跨库迁移”这一前提本身可疑：当目标模式缺少源查询所依赖的构件（例如 PostGIS 中没有等价的空间函数或层级关系）时，强行保结构可能产出“结构对了但语义错”的查询，而摘要只报告了可行场景。",
+     "成果载体是 University of Alberta 的机构仓储 ERA，属于学位论文而非同行评审会议/期刊，方法的新颖度和实验严谨性未经社区评审；10 万余条映射是同一批实验的产物，统计结论的独立性也无法判断。"
+    ],
+    "verdict": "worth_reading",
+    "verdict_reason": "主题（跨模式推理、schema linking 泛化、映射失败归因）与你们的 NL2GeoSQL 痛点高度重合，分析框架和评测维度可直接移植，但仅是学位论文摘要、无具体数字，先读价值在于思路而非可直接对照的基线。",
+    "tags": [
+     "cross-schema",
+     "schema linking",
+     "Text-to-SQL",
+     "benchmark",
+     "数据合成",
+     "schema 重建"
+    ],
+    "fulltext_source": "仅摘要"
+   }
+  },
+  {
+   "uid": "doi:10.31223/x5s81p",
+   "doi": "10.31223/x5s81p",
+   "title": "VeriGeo: Runtime Validation and Repair for Projections, Areal Interpolation, Topology, and Spatial Statistics in Automated GIS",
+   "authors": [
+    "Prince"
+   ],
+   "venue": "EarthArXiv (California Digital Library)",
+   "published": "2026-11-16",
+   "url": "https://doi.org/10.31223/x5s81p",
+   "pdf_url": "https://eartharxiv.org/repository/object/16148/download/27913/",
+   "sources": [
+    "OpenAlex"
+   ],
+   "abstract": "Automated GIS scripts can complete without runtime exceptions while still producing spatially invalid outputs. We present VeriGeo (NS-VGP 1.0), a Python runtime checking and repair layer for coordinate reference systems, areal interpolation, polygon topology, and spatial-statistics preconditions. We evaluate the implementation on a deterministic synthetic benchmark comprising 70 tasks (60 fault-injected tasks and 10 clean controls); the repository records 535 method executions across these tasks and ablations. The unverified GeoPandas baseline passed 0/60 fault-injected tasks and 10/10 controls (14.3% overall), with a 35.00% mean geodesic area error and a 169.56% mean population overcount on the benchmark joins. Under the benchmark's stated evaluator, VeriGeo passed 57/60 fault-injected tasks (95.0%) and 10/10 controls (67/70 = 95.7% overall; 95% Wilson CI [88.1%, 98.5%]), with a 25.44 ms mean execution latency and a 0.024% mean geodesic area error. Across the nine Gaussian-hotspot joins, per-zone population NMAE was 3.84% for VeriGeo versus 7.97% for area-weighted interpolation; including the unmasked water-barrier join, the ten-join means were 10.10% and 12.80%, respectively. Three tasks remain failures: the unmasked water barrier (MAUP-14), an ambiguously named integer-valued income field (MAUP-15), and a legitimate narrow canal removed by the sliver filter (TOPO-15). The statistics benchmark evaluates finite Moran-style outputs and selected spatial preconditions; it does not establish that GWR, LISA, or Getis-Ord estimators or inferential workflows have been validated.",
+   "scores": {
+    "relevance": 8.0,
+    "novelty": 7.0,
+    "transfer": 8.0,
+    "rigor": 6.0
+   },
+   "score": 7.05,
+   "direction": "GIS Agent / 地理代码生成",
+   "one_liner": "该论文为自动生成 GIS 脚本加入 CRS、面积插值、拓扑的运行时校验与修复，直接对应空间 SQL 中坐标系和单位带来的隐蔽错误；故障注入基准规模偏小，但思路高度可迁移。",
+   "digest": {
+    "tldr": "VeriGeo 是一个运行时校验与修复层，在 GIS 脚本执行前后检查坐标参考系（CRS）、面插值、拓扑与空间统计四类「静默错误」，在自建 70 个合成任务上把通过率从 14.3% 提升到 95.7%。",
+    "problem": "当前自动化 GIS（含 LLM 驱动的 GeoPandas 脚本生成）把「脚本跑完、没抛异常、写出了非空文件」当作成功，但空间数据恰恰存在大量「跑得通、结果错」的情况：在 EPSG:4326 上用 1°≈111320 m 换算做缓冲和面积、用 sjoin+sum 把跨界 tract 重复计入并顺手把 median_income 求和（MAUP／change of support 问题）、自相交「蝴蝶结」多边形与叠加产生的细碎多边形（sliver）、以及 Queen 邻接下孤岛／NaN／共线预测变量导致的统计静默失败。这类错误依赖数据本身的属性（CRS 元数据、重叠面积比例、sliver 宽度、设计矩阵条件数），光靠提示词（prompting）让模型「注意一下」基本无效，必须在运行时检查。",
+    "method": [
+     "五阶段固定流水线（Stage 1 几何清洗 → Stage 2 CRS 重投影 → Stage 3 列类型／统计前置校验 → Stage 4 执行算子 → Stage 5 后置校验 + 生成 Spatial Verification Record 审计记录），顺序固定是为了让多条规则之间的交互可复现：先用 make_valid 修环，保证后续投影和叠加不崩。",
+     "规则 1（CRS）：面积类算子（area、spatial_join、areal_interpolation、dissolve）按范围重投影到等积坐标系——美国本土 EPSG:5070、欧洲 EPSG:3035、其余 EPSG:6933；距离／缓冲／叠加类重投影到局部 UTM（EPSG:32601–32660 / 32701–32760），极地（|φ|≥80°）用极球面（3413/3031）。动机是等积投影会扭曲方向性缓冲距离，所以两类算子不能共用同一投影。",
+     "规则 2（MAUP）：用词边界正则（(^|_)token($|_)，避免 county 里命中 count、template 里命中 temp）+ 值域检查把列分成标识符／比率（intensive）／总量（extensive）三类，比率模式优先匹配以正确处理 pop_density 这类复合名；随后禁止对比率列做 SUM，比率用面积加权平均，总量用 Tobler 光滑 pycnophylactic 插值（40×40 格网、35 次 4 邻域 Laplacian 平滑、零通量边界、每轮按源 tract 总量重标定，保证体积守恒）。",
+     "规则 3（拓扑）：输入先 make_valid 修自相交；叠加后用等效条带宽度 Weq = 2×Area/Perimeter（对细长条近似等于宽度 w）配合 Polsby-Popper 紧致度 PP = 4πA/P² < 0.25，只有「又细又长」才判为 sliver 并剔除——动机是 1.5 m×1.5 m 的合法小地块 Weq 也只有 0.75 m，单看宽度会误删。",
+     "规则 4（空间统计前置检查）：中位数填补 NaN（记录到审计日志）、孤岛用投影后质心距离的 k 近邻权重（k∈[3,6]）行标准化替代 Queen 邻接、N<30 时记录 999 次置换的模式（仅元数据，未真正执行）、GWR 预测变量标准化后计算条件数 κ，κ>30 就迭代剔除最大成对相关变量；同时提供 auto_heal=True/False 两种模式以区分「自动修」与「只报警」。"
+    ],
+    "evidence": [
+     "总账：60 个注入故障任务上，未经校验的 GeoPandas 基线通过 0/60（0.0%），VeriGeo 通过 57/60（95.0%）；10 个干净对照全部通过且零误修，合计 67/70 = 95.7%（95% Wilson CI [88.1%, 98.5%]），平均端到端耗时 25.44 ms。仓库共记录 535 次执行（3×70 主方法 + 10 面积加权 + 15 紧致度规则 + 5×60 消融）。",
+     "CRS 类（15 任务，真值用 Karney WGS84 椭球测地算法与 Azimuthal Equidistant 投影计算）：基线平均测地面积误差 35.00%（中位 26.87%，从 12.0°N 的 2.88% 到 62.0°N 的 112.63%），VeriGeo 降到 0.024%，15/15 全部通过；缓冲任务 CRS-15（64.1°N）误差 27.53% → 0.020%。",
+     "MAUP 类：总量人口误差 169.56%（MAUP-01 单例 +183.04%，从 37,315 虚增到 105,618），VeriGeo 总量误差 0.0000%；9 个高斯热点 join 的每区 NMAE 从面积加权插值的 7.97% 降到 pycnophylactic 的 3.84%，计入 MAUP-14 水障后 10 个 join 均值 10.10% vs 12.80%；比率列被求和的收入膨胀比 3.987× → 0.998×（10 个 join 上 MAPE 1.18%，14 个标准 MAUP 任务上 1.97%）。",
+     "拓扑与统计：基线平均每任务残留 2.07 个 sliver、0/15 通过；VeriGeo 细长度规则 14/15（93.3%）、sliver 归零，而 v1 紧致度规则只有 10/15（66.7%）；统计类 15/15 通过（消除孤岛、κ 降到 1.00），但作者明确声明这只验证了「前置条件与有限输出」，并未真正拟合 GWR/LISA/Getis-Ord，也未跑 999 次置换。"
+    ],
+    "value": "真正的新意不在「检查 GIS 结果」这个笼统想法，而在于把四类静默错误写成可执行的规则并给出可复现的故障注入清单：尤其是「按算子类型分别选等积投影 vs 局部 UTM」和「词边界正则 + 值域把 extensive/intensive 分开、禁止对比率求和」这两条，是把 CCD（Core Concept Data Types）这类本体论工作在运行时真正落地，而不是停留在工作流规划阶段。它属于「LLM 生成 GIS 代码的正确性保障层」这条正在成形的支线，定位接近 GIS 版的运行时断言 + lint，而不是一个新模型或新 benchmark。",
+    "inspiration": [
+     "在 GeoSQL-Eval 里新增一个「静默错误」子集，与现有题目分开计分：不注入语法错误，只注入数据缺陷——(a) 几何列 SRID=4326 上要求 ST_Buffer(geom, 1000) 或 ST_Area；(b) 16 个源 tract 与 9 个目标 zone 边界不重合，要求按 zone 汇总人口与收入；(c) 含自相交多边形与 0.05–0.60 m 窄条；(d) 含孤岛多边形与共线预测列。评分从「能否执行」改成「与椭球测地面积／4 万点真值人口的相对误差是否低于阈值」，这样能直接暴露模型是否在照抄 1°≈111320 m 这类训练语料里常见的错误模式。",
+     "把「总量守恒但空间分布错」做成独立指标。VeriGeo 的 MAUP-14 是最有说服力的一例：总人口误差 0.0%，每区 NMAE 却高达 66.46%。你们的评测目前若只看结果表是否一致／是否非空，会漏掉同类问题；建议对聚合类 SQL 同时报告「总量误差」和「分区 NMAE／分布级指标」，用最小成本提升评测锋利度。",
+     "借它的故障注入模板反向合成纠错训练数据。文中模板是参数化的（15 个纬度 × clip_and_area/area/buffer 三类算子；16→9 zone 与 16→4 district 两种聚合；sliver 宽度 0.05–0.60 m），完全可以批量生成「错误 GeoSQL + 正确 GeoSQL + 差异解释」三元组，用于 SFT 或在 RL 里做偏好对，正好对接你们关心的「基于执行反馈的 SQL 纠错」——而且真值可以用 pyproj.Geod 或 geography 类型直接算出来，不必人工标注。",
+     "把这四条规则改写成 PostGIS 侧的校验器／agent 工具，挂在生成之后、交付之前。对应关系很直接：规则 1 → 检查几何 SRID 与 ST_SRID，强制 ST_Transform 到等积 SRID 或用 geography 类型走 ST_Area(geog)/ST_DWithin；规则 2 → 在 catalog 里给列打 extensive/intensive 标签，生成时禁止 SUM(median_income)、改用面积加权（ST_Area(ST_Intersection(...)) 做权重）；规则 3 → 强制 ST_MakeValid 与 ST_IsValid 检查，叠加后按 2*ST_Area/ST_Perimeter 过滤窄条；规则 4 → 聚合前检查孤岛与空值。这套东西可以直接做成你们 agent 流程里的 verifier 节点，形成「生成—执行—验证—重写」闭环。",
+     "它的列类型识别可以直接喂给 schema linking：把「population: extensive, median_income: intensive」这类语义标签写进数据库 COMMENT 或建表 DDL，再注入 prompt／作为检索时的 schema 描述字段。这比让模型从列名猜语义稳，而且能顺带解决它自己踩到的 MAUP-15（列名叫 attr_val 的整数收入被当成计数求和，膨胀 3.893×）——即在 schema 描述里显式声明单位和语义，而不是靠列名正则。"
+    ],
+    "limitations": [
+     "最需要警惕的是实验说服力：baseline 不是真实 LLM agent，而是作者手写的 GeoPandas 朴素代码模板（sjoin+sum、1°=111320 m），所以「0/60 → 57/60」不能读成「LLM 从 0 分变 95 分」；全部 70 个任务由单一随机种子（rng(42)）的模板生成，无真实普查／地籍数据，作者自己在 Threats to Validity 里承认「pass rates 只描述这个合成 benchmark」。",
+     "评测与修复耦合，存在循环论证风险：拓扑类的评测器用的就是修复规则同一条 1.0 m 宽度阈值，等于用规则本身证明规则有效；统计类的评测器只检查「输出有限、孤岛为零、条件数达标」，而执行分支根本不拟合 GWR/LISA/Getis-Ord，也不跑 999 次置换，所以 15/15 的含金量远低于 CRS 和 MAUP 两类。",
+     "工程上是硬编码启发式而非通用方案：投影只在 CONUS／欧洲／全球三档里选，英尺单位的投影坐标系未做归一化，面插值不检查目标多边形是否覆盖源区全域就分配总量，不透明整数列仍会被误判为计数（MAUP-15），sliver 规则会误删 0.80 m 的合法运河（TOPO-15，仅保留 67.57% 面积）；MAUP 类上耗时从 7.34 ms 涨到 66.82 ms（约 9 倍），自动修复还会静默改变统计推断（中位数填补、Queen 换 k-NN、剔除共线变量），作者只能靠 auto_heal=False 和审计日志缓解。另需注意这是单作者、EarthArXiv 未经同行评审的预印本。"
+    ],
+    "verdict": "worth_reading",
+    "verdict_reason": "方法与统计部分证据偏软（合成自建 benchmark、baseline 非真实 LLM、评测器与修复规则同阈值），但四类静默错误的划分和可复现的故障注入模板，能直接转化成你们 PostGIS benchmark 的新题型和 SQL 纠错训练数据的合成方案。",
+    "tags": [
+     "运行时校验",
+     "静默错误",
+     "坐标参考系",
+     "面插值",
+     "MAUP",
+     "数据合成"
+    ],
+    "fulltext_source": "PDF"
+   }
+  }
+ ],
+ "skim": []
+}

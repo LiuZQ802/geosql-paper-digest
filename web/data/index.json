@@ -1,6 +1,16 @@
 {
  "days": [
   {
+   "date": "2026-11-19",
+   "deep": 2,
+   "skim": 0,
+   "top": [
+    "Reasoning Across Relational Schemas with Large Language Models",
+    "VeriGeo: Runtime Validation and Repair for Projections, Areal Interpolation, Topology, and Spatial Statistics in Automated GIS"
+   ],
+   "preview": false
+  },
+  {
    "date": "2026-11-18",
    "deep": 1,
    "skim": 2,
@@ -37,5 +47,5 @@
    "preview": false
   }
  ],
- "updated_at": "2026-11-18T08:52:22+00:00"
+ "updated_at": "2026-11-19T09:06:28+00:00"
 }
