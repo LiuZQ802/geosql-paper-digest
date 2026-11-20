@@ -1,0 +1,107 @@
+{
+ "date": "2026-11-20",
+ "generated_at": "2026-11-20T08:46:20+00:00",
+ "stats": {
+  "fetched": 349,
+  "unique": 305,
+  "unseen": 230,
+  "candidates": 12,
+  "scored": 12,
+  "deep": 0,
+  "skim": 3,
+  "seconds": 77,
+  "tokens": 7209,
+  "llm_calls": 2
+ },
+ "deep": [],
+ "skim": [
+  {
+   "uid": "doi:10.5753/eniac.2026.31523",
+   "doi": "10.5753/eniac.2026.31523",
+   "title": "Agentic Benchmark Generation and Factorial Evaluation of Text-to-SQL Architectures on an Industrial Database",
+   "authors": [
+    "Thiago Pedroso de Jesus",
+    "Victor Arantes",
+    "F. Färber",
+    "Artur Matos",
+    "Vinícius A. Aguiar",
+    "Sávio Teles",
+    "Anderson da Silva Soares"
+   ],
+   "venue": "Anais do XXIII Encontro Nacional de Inteligência Artificial e Computacional (ENIAC 2026)",
+   "published": "2026-10-19",
+   "url": "https://www.semanticscholar.org/paper/0c2f6265ba350e109f4a305d316cb64d86a8a7e3",
+   "pdf_url": "https://sol.sbc.org.br/index.php/eniac/article/download/46954/46711",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Deploying Text-to-SQL in specialized industrial domains demands an evaluation benchmark grounded in real operational needs and an understanding of which architectural choices truly improve accuracy. Human-annotated benchmarks are prohibitively expensive, and current synthetic generators read only the schema, never the data, missing the quirks that make industrial questions hard. We present two contributions. First, an agentic benchmark generation pipeline in which a ReAct agent with five database-exploration tools formulates each question/SQL pair from observed data, enforcing quality through execution validation, vocabulary gates, and dual-layer deduplication; it expands 37 expert-validated seeds into a 169-pair Portuguese benchmark without paid annotation. Second, a controlled factorial study that fixes the model, benchmark, and metadata to isolate how schema presentation and tool access affect six architectures. We find that full-schema access and tool use add accuracy independently, that semantic schema linking helps simple but starves medium-complexity queries, and that self-correction and multi-agent decomposition do not pay off; above all, 57% of questions fail across every architecture, showing that the binding constraint is domain knowledge, not architectural sophistication.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 6.0,
+    "transfer": 7.0,
+    "rigor": 6.0
+   },
+   "score": 6.52,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "Agent驱动的工业数据库benchmark生成+架构因子实验，发现领域知识而非架构复杂度是瓶颈，数据驱动的合成方法对空间SQL数据合成有借鉴。"
+  },
+  {
+   "uid": "arxiv:2610.14700",
+   "arxiv_id": "2610.14700",
+   "title": "DSABench: Benchmarking Source Discovery, Coordination, and Execution for Multi-Database Agents",
+   "authors": [
+    "Jin-Long Luo",
+    "Hao-Ran Wu",
+    "Bo Xu"
+   ],
+   "venue": "",
+   "published": "2026-10-10",
+   "url": "https://arxiv.org/abs/2610.14700",
+   "pdf_url": "https://arxiv.org/pdf/2610.14700",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Most text-to-SQL benchmarks provide the target database. In a large data catalog, however, choosing the sources is part of the problem: an agent must find every database needed for a request, determine how their results fit together, and execute the resulting workflow. We present DSABench to evaluate these capabilities jointly. Its 815 human-reviewed tasks draw on Spider, BIRD, and LiveSQLBench; 618 require several databases to contribute, and 105 allow more than one interpretation of the required sources. Executable contracts define source participation, cross-source dependencies, and source-local execution, while RouteEnv lets agents inspect public catalog evidence without revealing the gold annotations. In our routing-only study across seven model backends, the highest RA-Set score is 60.55%, compared with a highest RA-Graph score of 34.66% when coordination requirements are included. The gap becomes more pronounced when execution is required. Across four backends, median non-privileged Route+Exec-Graph success ranges from 6.69% to 7.98% without clarification and from 11.44% to 13.25% with one clarification; the best observed clarified configuration reaches 16.99%. On ambiguous tasks, clarification improves exact branch-source recovery by 39.8-43.2 percentage points. These findings illustrate why retrieving plausible databases or producing correct local SQL is not enough: an agent must carry the right information through the entire multi-database workflow.",
+   "scores": {
+    "relevance": 6.0,
+    "novelty": 7.0,
+    "transfer": 5.0,
+    "rigor": 7.0
+   },
+   "score": 5.98,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "多数据库Agent的源发现-协调-执行联合评测，揭示跨库工作流瓶颈，对空间数据库联邦查询Agent化有启发。"
+  },
+  {
+   "uid": "doi:10.5753/eniac.2026.31596",
+   "doi": "10.5753/eniac.2026.31596",
+   "title": "Text-to-SQL Beyond Benchmarks: A Case Study on Large-Scale Deployment",
+   "authors": [
+    "Lucas Nobre",
+    "Vinícius A. Aguiar",
+    "José Oliveira",
+    "Lucas Alves",
+    "A. Soares",
+    "Sávio Teles"
+   ],
+   "venue": "Anais do XXIII Encontro Nacional de Inteligência Artificial e Computacional (ENIAC 2026)",
+   "published": "2026-10-19",
+   "url": "https://www.semanticscholar.org/paper/4afb8abf61906ddfdbdb803aba15a79fa70fb574",
+   "pdf_url": "https://sol.sbc.org.br/index.php/eniac/article/download/46973/46730",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Most Text-to-SQL evaluation evidence comes from academic benchmarks with small schemas and curated metadata, which differ from the databases these systems face in deployment. This study evaluates an agentic Text-to-SQL system deployed over open data from ANEEL, the Brazilian electricity regulator, a 140-table Brazilian-Portuguese database whose schema metadata is extracted automatically from dataset documentation. The agent is compared against a non-agentic one-shot baseline, with and without exploration tools, across schema scopes of 10, 50, and 140 tables, with BIRD-PT as an academic reference point. Each answer is scored under strict execution accuracy, relaxed execution accuracy, and a semantic-match judge. The agent reaches 63.56% strict execution accuracy on BIRD-PT and 15.01% on ANEEL under the same model, a gap of at least 36 percentage points on every metric. The correct table is retrieved for 60% of ANEEL questions against nearly 100% BIRD questions, and accuracy falls further during query construction. Across all schema scopes, strict execution accuracy ranks the baseline above the agent while relaxed execution accuracy and semantic match rank the agent above it, so the metric chosen decides which system a practitioner would select.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 5.0,
+    "transfer": 6.0,
+    "rigor": 5.0
+   },
+   "score": 5.93,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "大规模真实部署的Text-to-SQL落差分析，140表工业库vs学术基准差距36%+，metric选择颠倒系统排序，对空间SQL落地评测有警示。"
+  }
+ ]
+}
