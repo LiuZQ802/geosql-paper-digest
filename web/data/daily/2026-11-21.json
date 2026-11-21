@@ -1,0 +1,107 @@
+{
+ "date": "2026-11-21",
+ "generated_at": "2026-11-21T08:29:11+00:00",
+ "stats": {
+  "fetched": 347,
+  "unique": 308,
+  "unseen": 230,
+  "candidates": 15,
+  "scored": 15,
+  "deep": 0,
+  "skim": 3,
+  "seconds": 69,
+  "tokens": 8572,
+  "llm_calls": 2
+ },
+ "deep": [],
+ "skim": [
+  {
+   "uid": "doi:10.5753/eniac.2026.31539",
+   "doi": "10.5753/eniac.2026.31539",
+   "title": "SAGE-SQL: An Agentic Generator for Synthetic Text-to-SQL Benchmarks Grounded in Real Industrial Schemas",
+   "authors": [
+    "Victor Arantes",
+    "Thiago Pedroso de Jesus",
+    "Vinícius A. Aguiar",
+    "Artur Matos",
+    "Gustavo Bueno",
+    "Sávio Teles",
+    "Anderson da Silva Soares"
+   ],
+   "venue": "Anais do XXIII Encontro Nacional de Inteligência Artificial e Computacional (ENIAC 2026)",
+   "published": "2026-10-19",
+   "url": "https://www.semanticscholar.org/paper/fea85070b1a9ae83278ebbc1683de5518359e92c",
+   "pdf_url": "https://sol.sbc.org.br/index.php/eniac/article/download/46957/46714",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "Industrial Text-to-SQL deployments target schemas that academic benchmarks like Spider and BIRD do not exercise: foreign keys encoded only as naming conventions, sparsely populated columns, and domain-specific operational vocabulary. Synthetic benchmark generators have matured rapidly, yet every published generator we surveyed shares one structural feature: synthesis proceeds in fixed sequential stages, with execution used at most as a post-hoc filter. We introduce SAGE-SQL, an agentic generator in which a fresh ReAct-style agent with a five-tool toolkit explores a real production database during synthesis, constrained by a deterministic 15-template by 4-style schedule and inline execution-grounded gates. As a first, deliberately focused case study, we compare it against controlled re-implementations of OmniSQL and SQaLe on a single industrial schema (a regulated electric energy distribution utility) under a four-dimensional pointwise LLM-as-judge and a five-metric textual diversity panel. SAGE-SQL attains the highest mean schema grounding (4.80/5) and ranks first on four of five textual diversity metrics, while SQaLe attains the highest question quality and OmniSQL the lowest per-pair cost. Our contributions are the agentic generator paradigm, an evaluation framework that exposes textual mode collapse invisible to SQL duplicate metrics, and a single-schema characterization of when each paradigm is preferable, framed as a preliminary, methodology-focused study.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 7.0,
+    "transfer": 8.0,
+    "rigor": 6.0
+   },
+   "score": 6.96,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "SAGE-SQL提出Agent化合成工业级Text-to-SQL基准的新范式，ReAct代理在真实生产库中探索式合成而非固定流水线，并暴露文本模式坍塌问题；其合成数据生成与评测框架对构建PostGIS空间SQL基准有直接启发。"
+  },
+  {
+   "uid": "doi:10.48550/arxiv.2611.20511",
+   "arxiv_id": "2611.20511",
+   "doi": "10.48550/arxiv.2611.20511",
+   "title": "Optimizing Query Decomposition for Reliable Validation",
+   "authors": [
+    "Shuo Zhang",
+    "Sudeepa Roy",
+    "Jun Yang"
+   ],
+   "venue": "arXiv (Cornell University)",
+   "published": "2026-11-16",
+   "url": "https://doi.org/10.48550/arxiv.2611.20511",
+   "pdf_url": "https://arxiv.org/pdf/2611.20511",
+   "sources": [
+    "OpenAlex"
+   ],
+   "abstract": "Large language models (LLMs) have made querying databases more accessible, but cannot guarantee that the SQL they generate is correct. Without a trusted reference query, a validator (human or LLM) must decide whether a generated query answers the intended question. Enterprise questions often require queries with multiple joins, nested subqueries, and multi-level aggregation, and validating such a query in one judgment is error-prone. Decomposition simplifies this task by rewriting a query into smaller queries (blocks) that recompose to the original, each checked against its own sub-question. Decompositions differ, however: smaller blocks make each judgment easier but require more judgments, and the best balance depends on the validator's ability. We formulate validation-aware query decomposition as an optimization problem. Just as a query optimizer chooses among equivalent plans by estimated cost, we choose among decompositions by how reliably a given validator is expected to check them. We model how task difficulty and validator ability jointly affect reliability and define an objective that balances reliability against the number of judgments. Over a space of decompositions derived from logical-plan rewrites, our search finds an optimal one. We implement it in DecoVal, a pipeline that presents each block with its sub-question and input interface, combines local verdicts into a query-level decision, and localizes errors to blocks. A user study shows that decomposition helps human validators catch and locate errors: with DecoVal, participants caught 91% of the errors, up from 36% without decomposition, and located the error in nearly every rejection. Experiments on BEAVER and Spider 2.0 with LLM validators show that DecoVal also raises error-detection recall over whole-query validation while keeping precision high, and that the best granularity depends on the validator.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 7.0,
+    "transfer": 6.0,
+    "rigor": 7.0
+   },
+   "score": 6.62,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "将 SQL 验证分解为子查询块以提升校验可靠性，DecoVal 框架对空间 SQL 纠错与执行反馈机制有借鉴意义。"
+  },
+  {
+   "uid": "doi:10.5753/eniac.2026.30325",
+   "doi": "10.5753/eniac.2026.30325",
+   "title": "Agentic Text-to-SQL in Enterprise Environments: Balancing Planning Paradigms and Pragmatic Self-Repair",
+   "authors": [
+    "R. Miyaji",
+    "V. Bedin",
+    "João Victor Monteiro Macedo",
+    "Renato Moulin",
+    "Leonardo Machado"
+   ],
+   "venue": "Anais do XXIII Encontro Nacional de Inteligência Artificial e Computacional (ENIAC 2026)",
+   "published": "2026-10-19",
+   "url": "https://www.semanticscholar.org/paper/26f19714414db370346b78cbb9f1e8498f71a1c0",
+   "pdf_url": "https://sol.sbc.org.br/index.php/eniac/article/download/46838/46595",
+   "sources": [
+    "S2-推荐"
+   ],
+   "abstract": "The rapid adoption of Large Language Models (LLMs) has revolutionized Text-to-SQL systems, yet translating queries in complex enterprise environments remains challenging due to schema hallucinations and domain-specific jargon. We propose a multi-agent architecture that replaces internal generative self-correction with a database-driven self-repair loop and a two-tier Retrieval-Augmented Generation (RAG) system. We evaluate multiple planning and tool-use methods using a real-world corporate dataset. Our findings reveal that dual-system reasoning architectures provide an optimal balance of syntactic precision and user intent alignment. Furthermore, heavy iterative self-refinement introduces latency without proportional execution gains. This work establishes guidelines for designing reliable Text-to-SQL agents by decoupling cognitive planning from deterministic technical execution.",
+   "scores": {
+    "relevance": 7.0,
+    "novelty": 5.0,
+    "transfer": 7.0,
+    "rigor": 5.0
+   },
+   "score": 6.17,
+   "direction": "通用 Text-to-SQL 前沿",
+   "one_liner": "企业级多Agent Text-to-SQL架构，用数据库驱动自修复替代生成式自校正，并发现过度迭代精炼的延迟陷阱；其解耦认知规划与确定性执行、RAG双层检索的思路可直接迁移至PostGIS SQL纠错与Agent化流程。"
+  }
+ ]
+}
