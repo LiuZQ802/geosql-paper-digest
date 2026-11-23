@@ -1,0 +1,5 @@
+requests>=2.31
+pyyaml>=6.0
+beautifulsoup4>=4.12
+pymupdf>=1.24
+cryptography>=42

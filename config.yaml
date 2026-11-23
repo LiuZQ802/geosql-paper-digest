@@ -1,0 +1,147 @@
+# ============================================================
+#  地学 SQL 文献日报 —— 配置文件
+#  改研究方向、关键词、种子论文、模型，都只需要改这里
+# ============================================================
+
+# ---------- 研究者画像：LLM 打分和写“启发”时全靠这段 ----------
+profile:
+  description: |
+    研究方向：用大语言模型生成地理空间代码，核心是把自然语言问题转换成 PostGIS 空间 SQL（NL2GeoSQL）。
+    团队已有工作：
+      - GeoSQL-Eval：首个面向 PostGIS 的 NL2GeoSQL 大模型评测基准（Expert Systems with Applications, 2026）；
+      - PostGISer：首个端到端微调的 PostGIS GeoSQL 生成大模型（Information Processing & Management, 2026）；
+      - CodeGEEnius：通过蒸馏得到的、可解释推理的 Google Earth Engine（GEE）地理空间代码生成大模型（ESWA, 2026）。
+    因此 benchmark 构建、领域微调、推理蒸馏都是团队已经做过的事情，推荐时更看重“能带来下一步新思路”的工作。
+    数据类型以矢量数据为主，但核心关注点是“代码（SQL / GEE 脚本）生成”本身，而不是某类具体数据。
+    关心的具体问题包括：空间函数（ST_* 系列）的正确选择与参数使用、坐标参考系与距离/面积单位、
+    空间关系与拓扑语义的理解、schema linking、基于执行反馈的 SQL 纠错、
+    训练数据合成与微调策略（SFT / RL）、Text-to-SQL 的评测方法与指标、Agent 化的 SQL 生成流程。
+
+  # 推荐方向及权重（权重会乘到最终分数上，1.0 = 不打折）
+  directions:
+    - name: 空间/地学 Text-to-SQL
+      weight: 1.0
+      hint: 自然语言到空间 SQL / PostGIS / 空间数据库查询，地学数据库问答
+    - name: 通用 Text-to-SQL 前沿
+      weight: 0.95
+      hint: BIRD/Spider 等榜单上的新方法、schema linking、SQL 纠错、数据合成、强化学习训练、评测
+    - name: GIS Agent / 地理代码生成
+      weight: 0.85
+      hint: LLM 自动完成 GIS 分析、生成 GEE / Python / ArcPy / GeoPandas 代码、地理工作流 Agent、推理蒸馏
+    - name: 时空数据库 / KG 查询
+      weight: 0.75
+      hint: 时空数据库查询、GeoSPARQL、地学知识图谱问答、Text-to-SPARQL/Cypher
+    - name: 空间推理 / 地理知识
+      weight: 0.6
+      hint: LLM 的空间关系、拓扑、方位、距离推理能力，地理知识评测（噪声大，只要特别相关的）
+
+# ---------- 种子论文：用于 Semantic Scholar 相似论文推荐 ----------
+# 写标题即可，程序会自动检索并缓存 ID。强烈建议把你们团队自己的论文加进来。
+seeds:
+  # 团队论文
+  - "PostGISer: The first end-to-end fine-tuned large language model for PostGIS GeoSQL query generation"
+  - "GeoSQL-Eval: First Evaluation of LLMs on PostGIS-Based NL2GeoSQL Queries"
+  - "CodeGEEnius: an interpretable reasoning large language model for GEE-based geospatial code generation via distillation"
+  # 通用 Text-to-SQL 代表作
+  - "Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs"
+  - "Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows"
+  - "DIN-SQL: Decomposed In-Context Learning of Text-to-SQL with Self-Correction"
+  - "CHESS: Contextual Harnessing for Efficient SQL Synthesis"
+  - "OmniSQL: Synthesizing High-quality Text-to-SQL Data at Scale"
+
+# ---------- 团队论文：引用追踪 ----------
+# 近期引用了这些论文的新文章会被优先送去打分（通常与你们的工作最相关）
+team_papers:
+  - "PostGISer: The first end-to-end fine-tuned large language model for PostGIS GeoSQL query generation"
+  - "GeoSQL-Eval: First Evaluation of LLMs on PostGIS-Based NL2GeoSQL Queries"
+  - "CodeGEEnius: an interpretable reasoning large language model for GEE-based geospatial code generation via distillation"
+
+# ---------- 检索 ----------
+fetch:
+  arxiv_lookback_days: 7        # arXiv API 入库有延迟，回看一周；已推荐过的会被去重
+  openalex_lookback_days: 14    # 期刊论文入库有延迟
+  s2_lookback_days: 45          # 种子推荐里只要近期论文
+  citation_lookback_days: 60    # 引用追踪：近两个月引用了种子论文的新文章（引用数据入库较慢）
+  arxiv_max_results: 150
+
+  # arXiv 检索式（arXiv API 语法）
+  arxiv_queries:
+    - 'abs:"text-to-SQL" OR abs:"text2sql" OR abs:"NL2SQL" OR abs:"natural language to SQL" OR abs:"NL-to-SQL"'
+    - '(abs:"geospatial" OR abs:"PostGIS" OR abs:"spatial database" OR abs:"spatial SQL" OR abs:"GIS" OR abs:"GeoSPARQL" OR abs:"geographic information") AND (abs:"language model" OR abs:"LLM" OR abs:"LLMs")'
+    - '(abs:"spatial reasoning" OR abs:"spatio-temporal query" OR abs:"spatiotemporal question answering") AND (abs:"language model" OR abs:"LLM")'
+    - '(abs:"Earth Engine" OR abs:"geospatial code" OR abs:"GIS code" OR abs:"geospatial programming" OR abs:"geospatial analysis") AND (abs:"language model" OR abs:"LLM" OR abs:"LLMs" OR abs:"agent")'
+    - '(abs:"text-to-SPARQL" OR abs:"text-to-Cypher" OR abs:"knowledge graph question answering") AND (abs:"geographic" OR abs:"spatial" OR abs:"geoscience")'
+    # SQL / 数据库 Agent（不一定自称 text-to-SQL）
+    - '(abs:"SQL agent" OR abs:"database agent" OR abs:"data agent" OR abs:"SQL generation" OR abs:"query generation") AND (abs:"LLM" OR abs:"LLMs" OR abs:"language model")'
+    # 遥感 / 空间数据 + LLM 的查询与分析
+    - '(abs:"spatial data" OR abs:"vector data" OR abs:"remote sensing database" OR abs:"geodatabase") AND (abs:"LLM" OR abs:"LLMs" OR abs:"language model") AND (abs:query OR abs:code OR abs:SQL)'
+
+  # OpenAlex 检索词（只匹配标题+摘要，词之间是“且”关系，所以每条要短）
+  openalex_queries:
+    - "text-to-SQL"
+    - "NL2SQL"
+    - "text2sql"
+    - "PostGIS"
+    - "spatial SQL"
+    - "GeoSQL"
+    - "GIS large language model"
+    - "geospatial large language model"
+    - "geospatial code generation"
+    - "Earth Engine language model"
+    - "GeoSPARQL"
+    - "spatial database language model"
+
+# ---------- 关键词粗筛（不花钱，先把明显无关的剔掉） ----------
+# 末尾带 * 表示前缀匹配；分数累加，低于 min_score 的直接丢弃
+prefilter:
+  min_score: 3
+  terms:
+    postgis: 6
+    geosql: 6
+    nl2geosql: 6
+    earth engine: 4
+    gee: 3
+    spatial sql: 6
+    spatial text-to-sql: 6
+    geosparql: 4
+    text-to-sql: 4
+    text2sql: 4
+    nl2sql: 4
+    natural language to sql: 4
+    natural language interface* : 2
+    sql: 1.5
+    schema linking: 2
+    spatial database*: 3
+    geospatial: 2
+    gis: 2
+    geographic*: 1.5
+    spatial: 1
+    spatio-temporal: 1
+    spatiotemporal: 1
+    code generation: 1
+    sparql: 1.5
+    large language model*: 1
+    llm*: 1
+    agent*: 0.5
+    benchmark*: 0.5
+    fine-tun*: 0.5
+
+# ---------- LLM（OpenAI 兼容接口，DeepSeek / 中转站 / 其他均可） ----------
+llm:
+  base_url: ""                  # 留空：从环境变量 LLM_BASE_URL 读取（GitHub 上存为 Secret，不公开）
+  base_url_env: LLM_BASE_URL
+  api_key_env: LLM_API_KEY      # 从环境变量读取 key，不要把 key 写在这里
+  # 模型可写成列表：按顺序尝试，前一个在中转站上失败就自动换下一个
+  score_model: [kimi-k2.6, glm-5.3]          # 批量打分用（快、JSON 稳定）
+  digest_model: [deepseek-v4-pro, kimi-k2.6]  # 精读解读用（首选长文理解强的模型）
+  score_batch_size: 8
+  concurrency: 4                # 同时发起的 LLM 请求数
+  max_candidates: 120           # 每天最多送多少篇给 LLM 打分（控制成本）
+  fulltext_max_chars: 60000     # 送给 LLM 的全文最大长度
+
+# ---------- 选择规则 ----------
+select:
+  max_deep: 5          # 精读篇数上限
+  max_skim: 10         # 速览篇数上限
+  deep_min_score: 7.0  # 精读门槛（宁缺毋滥）
+  skim_min_score: 5.5  # 速览门槛

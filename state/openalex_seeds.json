@@ -1,0 +1,24 @@
+{
+ "PostGISer: The first end-to-end fine-tuned large language model for PostGIS GeoSQL query generation": [
+  "W7167728352"
+ ],
+ "GeoSQL-Eval: First Evaluation of LLMs on PostGIS-Based NL2GeoSQL Queries": [
+  "W7141691923"
+ ],
+ "CodeGEEnius: an interpretable reasoning large language model for GEE-based geospatial code generation via distillation": [
+  "W7203780476"
+ ],
+ "Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs": [
+  "W7133239790"
+ ],
+ "Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows": [],
+ "DIN-SQL: Decomposed In-Context Learning of Text-to-SQL with Self-Correction": [
+  "W7133205963"
+ ],
+ "CHESS: Contextual Harnessing for Efficient SQL Synthesis": [
+  "W4399115971"
+ ],
+ "OmniSQL: Synthesizing High-quality Text-to-SQL Data at Scale": [
+  "W4413978227"
+ ]
+}
