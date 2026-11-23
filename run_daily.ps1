@@ -3,12 +3,14 @@
 # - 跑完把加密后的数据推送到 GitHub，触发网页部署
 # - 云端 11:00 的任务看到当天已由本机跑过，就不再重复运行
 $ErrorActionPreference = "Continue"
+[Console]::OutputEncoding = [Text.Encoding]::UTF8   # Python 输出是 UTF-8，避免中文日志乱码
+$env:PYTHONIOENCODING = "utf-8"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
 New-Item -ItemType Directory -Force "$Root\logs" | Out-Null
 $Today = Get-Date -Format "yyyy-MM-dd"
 $Log = "$Root\logs\$Today.log"
-function Log($msg) { "$(Get-Date -Format 'HH:mm:ss') $msg" | Tee-Object -FilePath $Log -Append }
+function Log($msg) { $line = "$(Get-Date -Format 'HH:mm:ss') $msg"; Write-Output $line; [IO.File]::AppendAllText($Log, $line + "`r`n", [Text.Encoding]::UTF8) }
 
 # 读取本机密钥（.env.local，不进 git）
 if (-not (Test-Path "$Root\.env.local")) { Log "缺少 .env.local，退出"; exit 1 }
