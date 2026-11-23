@@ -19,7 +19,8 @@ Get-Content "$Root\.env.local" -Encoding UTF8 | ForEach-Object {
 }
 
 # 本机代理（Clash）在线就用它访问 arXiv / GitHub 等；出版社接口在代码里强制直连
-$proxyUp = Test-NetConnection -ComputerName 127.0.0.1 -Port 7890 -InformationLevel Quiet -WarningAction SilentlyContinue
+$proxyUp = $false
+try { $tcp = New-Object Net.Sockets.TcpClient; $proxyUp = $tcp.ConnectAsync("127.0.0.1", 7890).Wait(1000); $tcp.Close() } catch { }
 if ($proxyUp) { $env:HTTP_PROXY = "http://127.0.0.1:7890"; $env:HTTPS_PROXY = "http://127.0.0.1:7890" }
 Log "start (proxy: $proxyUp)"
 
