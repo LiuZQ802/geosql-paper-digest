@@ -109,6 +109,36 @@ def crossref_abstract(doi):
         return None
 
 
+def find_oa_pdfs(papers):
+    """给有 DOI 但没有 PDF 链接的论文找开放获取版本（如 PVLDB、作者自存稿），来自 Semantic Scholar。"""
+    todo = [p for p in papers if p.get("doi") and not p.get("pdf_url") and not p.get("arxiv_id")]
+    if not todo:
+        return
+    found = 0
+    for i in range(0, len(todo), 100):
+        chunk = todo[i:i + 100]
+        try:
+            h = {"x-api-key": os.environ["S2_API_KEY"]} if os.getenv("S2_API_KEY") else {}
+            r = http_post("https://api.semanticscholar.org/graph/v1/paper/batch", retries=3, timeout=60,
+                          params={"fields": "openAccessPdf,externalIds"},
+                          json={"ids": [f"DOI:{p['doi']}" for p in chunk]}, headers=h)
+            rows = r.json() if r.status_code == 200 else []
+        except Exception:  # noqa: BLE001
+            continue
+        for p, row in zip(chunk, rows):
+            if not row:
+                continue
+            url = (row.get("openAccessPdf") or {}).get("url")
+            aid = (row.get("externalIds") or {}).get("ArXiv")
+            if aid:
+                p["arxiv_id"], p["pdf_url"] = aid, f"https://arxiv.org/pdf/{aid}"
+                found += 1
+            elif url:
+                p["pdf_url"] = url
+                found += 1
+    log(f"open-access PDF lookup: {found}/{len(todo)} found")
+
+
 def recover_abstracts(papers):
     """给没有摘要的论文补摘要（原地修改）。补不到的标记 no_abstract=True。"""
     todo = [p for p in papers if not p.get("abstract") and p.get("doi")]

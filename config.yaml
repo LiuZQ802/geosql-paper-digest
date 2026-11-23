@@ -105,6 +105,14 @@ fetch:
     - "spatial data model"
     - "spatial analysis algorithm"
 
+  # Scopus 检索式（需要 Elsevier API key；按入库日期找新收录论文，覆盖付费期刊）
+  scopus_lookback_days: 7
+  scopus_queries:
+    - '"text-to-SQL" OR "NL2SQL" OR "text2SQL" OR "natural language to SQL"'
+    - '"spatial SQL" OR "PostGIS" OR "GeoSQL" OR "spatial database" AND ("language model" OR LLM)'
+    - '("GIS" OR "geospatial") AND ("large language model" OR LLM) AND ("code generation" OR agent OR query)'
+    - '"spatial index" OR "spatial join" OR "spatial query" OR "topological relation*"'
+
 # ---------- 关键词粗筛（不花钱，先把明显无关的剔掉） ----------
 # 末尾带 * 表示前缀匹配；分数累加，低于 min_score 的直接丢弃
 prefilter:

@@ -103,9 +103,21 @@ def _openalex_work(w, source_tag):
         sources=[source_tag])
 
 
+_OPENALEX_BLOCKED = False   # 熔断：被限流一次，本次运行就不再请求 OpenAlex
+
+
 def _openalex_get(filter_str, per_page=50):
-    r = http_get("https://api.openalex.org/works", params={
-        **_openalex_params(), "per_page": per_page, "sort": "publication_date:desc", "filter": filter_str})
+    global _OPENALEX_BLOCKED
+    if _OPENALEX_BLOCKED:
+        raise RuntimeError("skipped (OpenAlex rate-limited earlier in this run)")
+    try:
+        r = http_get("https://api.openalex.org/works", retries=2, params={
+            **_openalex_params(), "per_page": per_page, "sort": "publication_date:desc", "filter": filter_str})
+    except RuntimeError as e:
+        if "429" in str(e):
+            _OPENALEX_BLOCKED = True
+            log("OpenAlex rate limit hit — skipping remaining OpenAlex requests this run")
+        raise
     if r.status_code != 200:
         raise RuntimeError(f"HTTP {r.status_code}: {r.text[:200]}")
     return r.json().get("results", [])
@@ -174,6 +186,43 @@ def fetch_citing_papers(seed_titles, since: dt.date):
             out.append(p)
         log(f"citations: {len(results)} recent papers cite '{title[:40]}'")
         time.sleep(3)
+    return out
+
+
+# ---------------- Scopus（需要 ELSEVIER_API_KEY；覆盖付费期刊，类似 WOS） ----------------
+def fetch_scopus(queries, since: dt.date, count=25):
+    """按“入库日期”检索 Scopus 新收录的论文。Scopus 不给摘要，摘要交给 access.recover_abstracts 补。"""
+    key = os.getenv("ELSEVIER_API_KEY")
+    if not key:
+        return []
+    out = []
+    for q in queries:
+        query = (f"TITLE-ABS-KEY({q}) AND ORIG-LOAD-DATE AFT {since.strftime('%Y%m%d')} "
+                 f"AND PUBYEAR > {since.year - 2} AND DOCTYPE(ar OR cp OR re)")  # 排除新入库的旧书章节
+        try:
+            r = http_get("https://api.elsevier.com/content/search/scopus", retries=2, timeout=40,
+                         params={"query": query, "count": count, "sort": "-orig-load-date"},
+                         headers={"X-ELS-APIKey": key, "Accept": "application/json"})
+            entries = r.json().get("search-results", {}).get("entry", []) if r.status_code == 200 else []
+        except Exception as e:  # noqa: BLE001
+            log("Scopus query failed:", q, e)
+            continue
+        n = 0
+        for e in entries:
+            if e.get("error") or not e.get("dc:title"):
+                continue
+            doi = (e.get("prism:doi") or "").lower() or None
+            out.append(_paper(
+                uid=f"doi:{doi}" if doi else f"scopus:{e.get('dc:identifier', '')}",
+                doi=doi, title=e.get("dc:title") or "", abstract="",
+                authors=[e["dc:creator"]] if e.get("dc:creator") else [],
+                venue=e.get("prism:publicationName") or "",
+                published=e.get("prism:coverDate") or "",
+                url=f"https://doi.org/{doi}" if doi else (e.get("prism:url") or ""),
+                sources=["Scopus"]))
+            n += 1
+        log(f"Scopus: {n} new for {q[:50]}")
+        time.sleep(1)
     return out
 
 

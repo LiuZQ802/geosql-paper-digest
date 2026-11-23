@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 import yaml
 
 from . import prompts, sources, vault
-from .access import recover_abstracts
+from .access import find_oa_pdfs, recover_abstracts
 from .enrich import enrich
 from .fulltext import get_fulltext
 from .llm import LLM, USAGE
@@ -194,6 +194,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--date", help="日期 YYYY-MM-DD，默认今天")
     ap.add_argument("--no-llm", action="store_true", help="只检索和粗筛，不调用 LLM")
+    ap.add_argument("--scopus-days", type=int, help="临时放宽 Scopus 回看天数（补检用）")
     args = ap.parse_args()
 
     cfg = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
@@ -208,6 +209,8 @@ def main():
     raw += sources.fetch_openalex(f["openalex_queries"], today - dt.timedelta(days=f["openalex_lookback_days"]))
     raw += sources.fetch_s2_recommendations(cfg.get("seeds") or [],
                                             today - dt.timedelta(days=f["s2_lookback_days"]))
+    raw += sources.fetch_scopus(f.get("scopus_queries") or [],
+                                today - dt.timedelta(days=args.scopus_days or f.get("scopus_lookback_days", 7)))
     raw += sources.fetch_citing_papers(cfg.get("team_papers") or [],
                                        today - dt.timedelta(days=f.get("citation_lookback_days", 60)))
     for p in raw:
@@ -238,6 +241,7 @@ def main():
         ranked = sorted(llm_score(llm, cands, cfg), key=lambda p: -p["score"])
         # 短名单：够得上速览的论文，补全作者/单位/期刊并分级
         shortlist = [p for p in ranked if p["score"] >= sel["skim_min_score"]][: sel.get("max_shortlist", 25)]
+        find_oa_pdfs(shortlist)  # Scopus/OpenAlex 来的论文补开放获取 PDF（PVLDB、作者自存稿、arXiv 版本）
         enrich(llm, shortlist, cfg)
         deep, skim = select(shortlist, sel)
         with ThreadPoolExecutor(cfg["llm"].get("concurrency", 4)) as pool:
