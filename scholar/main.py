@@ -267,6 +267,13 @@ def main():
     path = DATA / "daily" / f"{today.isoformat()}.json"
     old = vault.load(path, None)
     if old and not old.get("preview") and not args.no_llm:
+        # 同一天多次运行：花费、token 累加
+        old_cost = (old.get("stats") or {}).get("cost") or {}
+        if old_cost.get("usd") is not None:
+            new_cost = stats.get("cost") or {"usd": 0}
+            stats["cost"] = {**new_cost, "usd": round(new_cost["usd"] + old_cost["usd"], 4),
+                             "estimated": bool(old_cost.get("estimated"))}
+        stats["tokens"] = stats.get("tokens", 0) + (old.get("stats") or {}).get("tokens", 0)
         known = {p["uid"] for p in old["deep"] + old["skim"]}
         deep = [*old["deep"], *[public(p) for p in deep if p["uid"] not in known]]
         skim = [*old["skim"], *[public(p) for p in skim if p["uid"] not in known]]
