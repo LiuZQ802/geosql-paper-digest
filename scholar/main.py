@@ -14,6 +14,8 @@ from concurrent.futures import ThreadPoolExecutor
 import yaml
 
 from . import prompts, sources, vault
+from .access import recover_abstracts
+from .enrich import enrich
 from .fulltext import get_fulltext
 from .llm import LLM, USAGE
 from .util import ROOT, log, read_json, write_json
@@ -95,10 +97,27 @@ def _apply_scores(res, by_id, weights):
                  score=final_score(s, weights.get(direction, 0.5)))
 
 
+# ---------------- 选择 ----------------
+QUALITY_BONUS = {"A": 0.8, "B": 0.3, "C": 0.0}
+
+
+def select(shortlist, sel):
+    """精读 = 分数够 + 发表质量够（顶会顶刊，或好单位的预印本）；其余进速览。"""
+    allowed = set(sel.get("deep_quality", ["A", "B"]))
+    eligible = [p for p in shortlist
+                if p["score"] >= sel["deep_min_score"] and (p.get("quality") or "C") in allowed]
+    eligible.sort(key=lambda p: -(p["score"] + QUALITY_BONUS.get(p.get("quality"), 0)))
+    deep = eligible[: sel["max_deep"]]
+    skim = [p for p in shortlist if p not in deep][: sel["max_skim"]]
+    return deep, skim
+
+
 # ---------------- 精读 ----------------
 def digest(llm, paper, cfg):
     lcfg = cfg["llm"]
-    text, src = get_fulltext(paper, lcfg.get("fulltext_max_chars", 60000))
+    if "_fulltext" not in paper:  # 信息补全阶段通常已经抓过，复用
+        paper["_fulltext"] = get_fulltext(paper, lcfg.get("fulltext_max_chars", 60000))
+    text, src = paper["_fulltext"]
     log(f"digest [{src}] {paper['title'][:70]}")
     if text and not paper.get("code_url"):
         paper["code_url"] = find_code_url(text[:20000])  # 只看正文前部，避免抓到参考文献里别人的仓库
@@ -122,7 +141,7 @@ def find_code_url(text):
 # ---------------- 中文翻译 ----------------
 def translate(llm, papers, cfg, batch_size=4):
     """给要展示的论文补中文标题和中文摘要（只翻译最终入选的，省钱）。"""
-    todo = [p for p in papers if not p.get("abstract_zh")]
+    todo = [p for p in papers if not p.get("title_zh") or (p.get("abstract") and not p.get("abstract_zh"))]
     batches = [todo[i:i + batch_size] for i in range(0, len(todo), batch_size)]
     by_id = {p["uid"]: p for p in todo}
 
@@ -137,15 +156,18 @@ def translate(llm, papers, cfg, batch_size=4):
         for res in pool.map(run, batches):
             for r in res.get("results", []):
                 p = by_id.get(r.get("id"))
-                if p and r.get("abstract_zh"):
-                    p["title_zh"], p["abstract_zh"] = r.get("title_zh", ""), r["abstract_zh"]
-    log(f"translated {sum(1 for p in todo if p.get('abstract_zh'))}/{len(todo)}")
+                if p and r.get("title_zh"):
+                    p["title_zh"] = r["title_zh"]
+                    if r.get("abstract_zh") and p.get("abstract"):
+                        p["abstract_zh"] = r["abstract_zh"]
+    log(f"translated {sum(1 for p in todo if p.get('title_zh'))}/{len(todo)}")
 
 
 # ---------------- 输出 ----------------
 PUBLIC_FIELDS = ["uid", "arxiv_id", "doi", "title", "title_zh", "authors", "venue", "published", "url",
                  "pdf_url", "code_url", "cites_seed", "sources", "abstract", "abstract_zh", "scores", "score",
-                 "direction", "one_liner", "digest"]
+                 "direction", "one_liner", "digest", "people", "venue_norm", "venue_status", "venue_tier",
+                 "inst_tier", "quality", "quality_reason", "no_abstract", "abstract_src"]
 
 
 def public(p):
@@ -160,6 +182,8 @@ def update_index(date_str, day):
     idx["days"].append({
         "date": date_str, "deep": len(day["deep"]), "skim": len(day["skim"]),
         "top": [p["title"] for p in day["deep"][:3]],
+        "cost_usd": (day["stats"].get("cost") or {}).get("usd"),
+        "cost_est": (day["stats"].get("cost") or {}).get("estimated", False),
         "preview": day.get("preview", False)})
     idx["days"].sort(key=lambda d: d["date"], reverse=True)
     idx["updated_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -188,7 +212,7 @@ def main():
                                        today - dt.timedelta(days=f.get("citation_lookback_days", 60)))
     for p in raw:
         p["code_url"] = p.get("code_url") or find_code_url(f"{p['abstract']} {p.get('comment', '')}")
-    papers = sources.dedupe([p for p in raw if p["title"] and p["abstract"]])
+    papers = sources.dedupe([p for p in raw if p["title"]])
 
     # 2. 过滤已经看过的
     seen = set(read_json(STATE / "seen.json", []))
@@ -198,6 +222,8 @@ def main():
     # 3. 关键词粗筛
     cands = prefilter(fresh, cfg["prefilter"])[: cfg["llm"].get("max_candidates", 120)]
     log(f"prefilter kept {len(cands)}")
+    if not args.no_llm:
+        recover_abstracts(cands)  # 付费期刊（尤其 Elsevier）常缺摘要：用 Elsevier API / S2 / Crossref 补
 
     stats = {"fetched": len(raw), "unique": len(papers), "unseen": len(fresh), "candidates": len(cands)}
 
@@ -210,9 +236,10 @@ def main():
     else:
         llm = LLM(cfg["llm"])
         ranked = sorted(llm_score(llm, cands, cfg), key=lambda p: -p["score"])
-        deep = [p for p in ranked if p["score"] >= sel["deep_min_score"]][: sel["max_deep"]]
-        rest = [p for p in ranked if p not in deep]
-        skim = [p for p in rest if p["score"] >= sel["skim_min_score"]][: sel["max_skim"]]
+        # 短名单：够得上速览的论文，补全作者/单位/期刊并分级
+        shortlist = [p for p in ranked if p["score"] >= sel["skim_min_score"]][: sel.get("max_shortlist", 25)]
+        enrich(llm, shortlist, cfg)
+        deep, skim = select(shortlist, sel)
         with ThreadPoolExecutor(cfg["llm"].get("concurrency", 4)) as pool:
             for p, d in zip(deep, pool.map(lambda p: digest(llm, p, cfg), deep)):
                 p["digest"] = d
@@ -231,6 +258,10 @@ def main():
 
     stats.update(deep=len(deep), skim=len(skim), seconds=round(time.time() - t0),
                  tokens=USAGE["prompt_tokens"] + USAGE["completion_tokens"], llm_calls=USAGE["calls"])
+    if not args.no_llm:
+        stats["cost"] = llm.cost()
+        if stats["cost"]:
+            log(f"cost ≈ ${stats['cost']['usd']:.3f} (relay quota)")
 
     # 同一天多次运行：合并而不是覆盖
     path = DATA / "daily" / f"{today.isoformat()}.json"

@@ -117,7 +117,7 @@ def fetch_openalex(queries, since: dt.date, per_page=50):
     for q in queries:
         q_clean = q.replace(",", " ")
         try:
-            results = _openalex_get(f"from_publication_date:{since.isoformat()},has_abstract:true,type:article|preprint|review,"
+            results = _openalex_get(f"from_publication_date:{since.isoformat()},type:article|preprint|review,"
                                     f"title_and_abstract.search:{q_clean}", per_page)
         except Exception as e:  # noqa: BLE001
             log("OpenAlex query failed:", q, e)
@@ -164,7 +164,7 @@ def fetch_citing_papers(seed_titles, since: dt.date):
             continue
         try:
             results = _openalex_get(f"cites:{'|'.join(ids)},from_publication_date:{since.isoformat()},"
-                                    f"has_abstract:true,type:article|preprint|review", 50)
+                                    f"type:article|preprint|review", 50)
         except Exception as e:  # noqa: BLE001
             log("OpenAlex citations failed:", title[:40], e)
             continue

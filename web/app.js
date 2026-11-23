@@ -19,6 +19,7 @@ const DIRS = [
   { name: "通用 Text-to-SQL 前沿", c: "--d2" },
   { name: "GIS Agent / 地理代码生成", c: "--d3" },
   { name: "时空数据库 / KG 查询", c: "--d4" },
+  { name: "空间数据库 / GIS 原理", c: "--d6" },
   { name: "空间推理 / 地理知识", c: "--d5" },
 ];
 const dirColor = (name) => `var(${(DIRS.find((d) => d.name === name) || { c: "--d0" }).c})`;
@@ -132,6 +133,7 @@ async function start(locked = false) {
   $("#only-deep").checked = state.onlyDeep;
   $("#show-zh").checked = state.zh;
   renderLegend();
+  renderCost();
   renderDates();
   await render();
   if (location.hash.length > 1) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
@@ -157,6 +159,38 @@ function authors(p) {
   const a = p.authors || [];
   return esc(a.slice(0, 3).join(", ") + (a.length > 3 ? " 等" : ""));
 }
+const venueName = (p) => p.venue_norm || p.venue || "";
+const STATUS = { accepted: "已接收" };
+
+/* 一作 · 通讯 · 单位 · 期刊（有补全信息时；否则退回作者列表） */
+function people(p, compact = false) {
+  const pp = p.people;
+  if (!pp || !pp.first_author) {
+    return `<p class="byline">${authors(p)} · <span class="venue">${esc(venueName(p))}</span>${p.published ? ` · ${esc(p.published)}` : ""}</p>`;
+  }
+  const who = (n, a) => `<b>${hl(n)}</b>${a ? `<span class="aff">${hl(a)}</span>` : ""}`;
+  const corr = (pp.corresponding || []).filter((c) => c && c.name);
+  const sameAsFirst = corr.length === 1 && corr[0].name === pp.first_author;
+  const st = STATUS[p.venue_status] ? `<span class="st">${STATUS[p.venue_status]}</span>` : "";
+  if (compact) {
+    return `<p class="who compact">一作 ${who(pp.first_author, pp.first_affil)}${corr.length && !sameAsFirst ? ` · 通讯 ${who(corr[0].name, corr[0].affil)}` : ""}</p>`;
+  }
+  const others = (pp.institutions || []).filter((i) => i && i !== pp.first_affil && !corr.some((c) => c.affil === i));
+  return `<dl class="who">
+    <div><dt>一作</dt><dd>${who(pp.first_author, pp.first_affil)}</dd></div>
+    <div><dt>通讯</dt><dd>${corr.length ? corr.map((c) => who(c.name, c.affil)).join("、") + (sameAsFirst ? "<span class=\"aff\">（同一作）</span>" : "") : '<span class="na">文中未标注</span>'}</dd></div>
+    ${others.length ? `<div><dt>其他单位</dt><dd>${others.map(hl).join("、")}</dd></div>` : ""}
+    <div><dt>发表</dt><dd><b>${hl(venueName(p))}</b>${st}${p.published ? `<span class="aff">${esc(p.published)}</span>` : ""}</dd></div>
+  </dl>`;
+}
+function qualityTags(p) {
+  const why = esc(p.quality_reason || "");
+  let out = "";
+  if (p.venue_tier === "top") out += `<span class="tag top" title="${why}">顶会顶刊</span>`;
+  if (p.inst_tier === "top") out += `<span class="tag top-inst" title="${why}">顶尖单位</span>`;
+  return out;
+}
+const money = (usd) => usd == null ? "—" : usd < 0.01 ? "<$0.01" : `$${usd.toFixed(2)}`;
 function titleBlock(p, tag) {
   const zh = state.zh && p.title_zh;
   const main = zh ? hl(p.title_zh) : hl(p.title);
@@ -184,7 +218,7 @@ function scale(p) {
   return `<div class="scale">${ms}<div class="total"><b>${p.score.toFixed(1)}</b><small>综合分</small></div></div>`;
 }
 function abstractBlock(p) {
-  if (!p.abstract) return "";
+  if (!p.abstract) return p.no_abstract ? `<div class="abs"><p class="cost-note">出版社未公开摘要，评分只依据标题和期刊。</p></div>` : "";
   const hasZh = !!p.abstract_zh;
   const lang = state.absLang[p.uid] || (state.zh && hasZh ? "zh" : "en");
   const text = lang === "zh" && hasZh ? p.abstract_zh : p.abstract;
@@ -198,6 +232,7 @@ function metaRow(p, extra = "") {
   return `<div class="meta-row">
     <span class="dir"><i class="sw" style="--c:${dirColor(p.direction)}"></i>${esc(p.direction || "其他")}</span>
     ${d?.verdict ? `<span class="tag ${esc(d.verdict)}">${VERDICT[d.verdict] || esc(d.verdict)}</span>` : ""}
+    ${qualityTags(p)}
     ${p.cites_seed ? `<span class="tag cite" title="这篇论文引用了团队论文">${icon("cite")}引用 ${esc(p.cites_seed)}</span>` : ""}
     ${p.code_url ? `<span class="tag plain">${icon("code")}开源代码</span>` : ""}
     ${extra}${starBtn(p)}
@@ -209,7 +244,7 @@ function paperDeep(p, date) {
   return `<article class="paper" id="${pid(p)}">
     ${metaRow(p, date ? `<span class="tag plain">${esc(date)}</span>` : "")}
     ${titleBlock(p, "h3")}
-    <p class="byline">${authors(p)} · <span class="venue">${esc(p.venue || "")}</span> · ${esc(p.published || "")}</p>
+    ${people(p)}
     ${d.tldr ? `<p class="tldr">${hl(d.tldr)}</p>` : p.one_liner ? `<p class="tldr">${hl(p.one_liner)}</p>` : ""}
     ${d.inspiration?.length ? `<section class="insight"><h4>${icon("bulb")}对你研究的启发</h4>${list(d.inspiration)}</section>` : ""}
     ${scale(p)}
@@ -239,9 +274,10 @@ function paperSkim(p, date) {
     <div>
       ${titleBlock(p, "h3")}
       ${p.one_liner ? `<p class="ol">${hl(p.one_liner)}</p>` : ""}
+      ${people(p, true)}
       <div class="m">
         <span class="dir"><i class="sw" style="--c:${dirColor(p.direction)}"></i>${esc(p.direction || "其他")}</span>
-        <span>${esc(p.venue || "")}</span>${date ? `<span>${esc(date)}</span>` : ""}
+        <span class="venue">${esc(venueName(p))}${STATUS[p.venue_status] ? `（${STATUS[p.venue_status]}）` : ""}</span>${qualityTags(p)}${date ? `<span>${esc(date)}</span>` : ""}
         ${p.cites_seed ? `<span class="tag cite">${icon("cite")}引用 ${esc(p.cites_seed)}</span>` : ""}
         ${p.code_url ? `<a href="${esc(p.code_url)}" target="_blank" rel="noopener">代码</a>` : ""}
       </div>
@@ -256,7 +292,7 @@ function matches(p) {
   if (state.hidden.has(p.direction || "其他")) return false;
   if (!state.q) return true;
   const q = state.q.toLowerCase();
-  return JSON.stringify([p.title, p.title_zh, p.one_liner, p.abstract, p.abstract_zh, p.digest, p.authors, p.venue])
+  return JSON.stringify([p.title, p.title_zh, p.one_liner, p.abstract, p.abstract_zh, p.digest, p.authors, p.venue, p.venue_norm, p.people])
     .toLowerCase().includes(q);
 }
 const filtersActive = () => state.hidden.size > 0 || state.onlyDeep;
@@ -268,6 +304,22 @@ function renderLegend() {
   }).join("");
   $("#filter-dot").hidden = !filtersActive();
 }
+function renderCost() {
+  const days = state.index.days.filter((d) => d.cost_usd != null);
+  if (!days.length) { $("#cost").innerHTML = `<p class="cost-note">还没有花费记录</p>`; return; }
+  const sum = (n) => days.slice(0, n).reduce((s, d) => s + d.cost_usd, 0);
+  const total = sum(days.length), rate = 7.3;
+  const max = Math.max(...days.slice(0, 14).map((d) => d.cost_usd), 0.0001);
+  $("#cost").innerHTML = `
+    <div class="cost-big"><b>${money(sum(7))}</b><span>近 7 天</span></div>
+    <p class="cost-line">近 30 天 ${money(sum(30))} · 累计 ${money(total)}<br>按中转站汇率约 ¥${(total * rate).toFixed(2)}</p>
+    <details class="cost-days"><summary>每日明细${icon("chev")}</summary>
+      <ol>${days.slice(0, 30).map((d) => `<li><span>${d.date.slice(5).replace("-", "/")}</span>
+        <i style="width:${Math.max(4, (d.cost_usd / max) * 100)}%"></i><b>${money(d.cost_usd)}${d.cost_est ? "<small>估</small>" : ""}</b></li>`).join("")}</ol>
+    </details>
+    <p class="cost-note">单位是中转站的美元额度，由每天实际用量 × 中转站价格表计算。标“估”的日期没有分模型记录，按总量估算。</p>`;
+}
+
 function renderDates() {
   $("#dates").innerHTML = state.index.days.map((d) => {
     const { md } = fmtDay(d.date);
@@ -307,7 +359,7 @@ async function renderFeed() {
     const { md, wk } = fmtDay(day.date);
     html += `<section class="day" id="day-${day.date}">
       <header class="day-head"><h2>${md}<span class="wk">${wk}</span></h2>
-        <span class="stat">${day.deep.length} 篇精读 · ${day.skim.length} 篇速览${day.stats?.candidates != null ? ` · 从 ${day.stats.candidates} 篇候选中选出` : ""}</span></header>
+        <span class="stat">${day.deep.length} 篇精读 · ${day.skim.length} 篇速览${day.stats?.candidates != null ? ` · 从 ${day.stats.candidates} 篇候选中选出` : ""}${day.stats?.cost?.usd != null ? ` · 花费 ${money(day.stats.cost.usd)}${day.stats.cost.estimated ? "（估）" : ""}` : ""}</span></header>
       ${deep.map((p) => paperDeep(p)).join("")}
       ${skim.length ? `<div class="skims">${skim.map((p) => paperSkim(p)).join("")}</div>` : ""}
       ${!deep.length && !skim.length ? `<p class="day-empty">这天没有达到推荐门槛的新论文。</p>` : ""}

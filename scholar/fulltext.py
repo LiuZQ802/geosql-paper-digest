@@ -57,6 +57,9 @@ def get_fulltext(paper, max_chars=60000):
         attempts.append(("arXiv HTML", lambda: from_arxiv_html(paper["arxiv_id"])))
     if paper.get("pdf_url"):
         attempts.append(("PDF", lambda: from_pdf(paper["pdf_url"])))
+    if (paper.get("doi") or "").startswith("10.1016/"):
+        from .access import elsevier_fulltext
+        attempts.append(("Elsevier 全文", lambda: elsevier_fulltext(paper["doi"])))
     for name, fn in attempts:
         try:
             text = fn()

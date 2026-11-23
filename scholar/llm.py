@@ -4,9 +4,24 @@ import os
 import re
 import time
 
-from .util import http_post, log
+import threading
 
-USAGE = {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
+from .util import http_get, http_post, log
+
+USAGE = {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0, "by_model": {}}
+_lock = threading.Lock()
+
+
+def _record(model, u):
+    with _lock:
+        p, c = u.get("prompt_tokens", 0), u.get("completion_tokens", 0)
+        USAGE["prompt_tokens"] += p
+        USAGE["completion_tokens"] += c
+        USAGE["calls"] += 1
+        m = USAGE["by_model"].setdefault(model, {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0})
+        m["prompt_tokens"] += p
+        m["completion_tokens"] += c
+        m["calls"] += 1
 
 
 class LLM:
@@ -55,16 +70,47 @@ class LLM:
                     err = str(data.get("error", data))[:300]
                     time.sleep(15 * (i + 1))
                     continue
-                u = data.get("usage") or {}
-                USAGE["prompt_tokens"] += u.get("prompt_tokens", 0)
-                USAGE["completion_tokens"] += u.get("completion_tokens", 0)
-                USAGE["calls"] += 1
+                _record(model, data.get("usage") or {})
                 return _parse_json(data["choices"][0]["message"]["content"])
             except (ValueError, KeyError, RuntimeError) as e:
                 err = str(e)
                 time.sleep(3)
         log(f"LLM call failed ({model}):", err)
         raise RuntimeError(err)
+
+
+    def cost(self):
+        """按中转站（New API）公开的价格表估算本次运行花费，单位是中转站的美元额度。
+
+        New API 计费：quota = (输入 token + 输出 token × completion_ratio) × model_ratio × group_ratio，
+        500000 quota = $1。部分模型有分时段加价表达式，这里只处理常见的“某时段 ×2”。
+        """
+        try:
+            r = http_get(self.base.removesuffix("/v1") + "/api/pricing", retries=2, timeout=30,
+                         headers={"Authorization": f"Bearer {self.key}"})
+            data = r.json()
+            prices = {row["model_name"]: row for row in data.get("data", [])}
+            group = (data.get("group_ratio") or {}).get("default", 1)
+        except Exception as e:  # noqa: BLE001
+            log("pricing unavailable:", e)
+            return None
+        hour = time.gmtime().tm_hour + 8  # 北京时间
+        hour %= 24
+        total, by_model = 0.0, {}
+        for model, u in USAGE["by_model"].items():
+            row = prices.get(model)
+            if not row:
+                continue
+            quota = (u["prompt_tokens"] + u["completion_tokens"] * row.get("completion_ratio", 1)) \
+                * row.get("model_ratio", 0) * group
+            for lo, hi in re.findall(r'hour\("Asia/Shanghai"\) >= (\d+) && hour\("Asia/Shanghai"\) < (\d+) \? 2',
+                                     row.get("billing_expr") or ""):
+                if int(lo) <= hour < int(hi):
+                    quota *= 2
+            usd = quota / 500000
+            by_model[model] = {**u, "usd": round(usd, 4)}
+            total += usd
+        return {"usd": round(total, 4), "by_model": by_model}
 
 
 def _parse_json(text):

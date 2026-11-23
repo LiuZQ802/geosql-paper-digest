@@ -20,6 +20,9 @@ def score_system(profile):
 - relevance 相关性：9–10 = 直接研究空间/地学 Text-to-SQL、PostGIS 或空间数据库的自然语言查询；
   7–8 = 通用 Text-to-SQL 的新方法/新数据/新评测，或 GIS 代码生成 Agent，方法明显可迁移；
   4–6 = 相邻方向（KG 问答、空间推理、一般代码生成），有一定借鉴意义；0–3 = 无关。
+  空间数据库 / GIS 原理类论文（空间索引、查询处理、拓扑关系、空间分析、数据模型与标准）不要求涉及 LLM：
+  按它对“让 LLM 正确生成、执行、评测空间 SQL”的帮助打分，例如能帮助形式化空间语义、设计评测题、
+  理解 PostGIS 函数行为或优化查询的给 6–8，与 SQL/查询完全无关的纯算法或纯应用给 ≤4。
   注意：“spatial / 空间”必须指地理空间（GIS、地图、坐标、地理实体）。空间组学、空间转录组、
   医学影像、细胞/组织空间、机器人室内空间等其他领域的 spatial 都不算地学：这类论文的 direction
   不得选“空间/地学 Text-to-SQL”，relevance 最多按“通用 Text-to-SQL 前沿”给分（≤8）。
@@ -43,7 +46,8 @@ def score_system(profile):
 def score_user(batch):
     items = []
     for p in batch:
-        it = {"id": p["uid"], "title": p["title"], "venue": p.get("venue", ""), "abstract": p["abstract"][:1800]}
+        it = {"id": p["uid"], "title": p["title"], "venue": p.get("venue", ""),
+              "abstract": p["abstract"][:1800] or "（无摘要：出版社未公开。只能凭标题和期刊判断，请保守打分，rigor 不超过 5）"}
         if p.get("cites_seed"):
             it["note"] = f"这篇论文引用了研究者团队的论文《{p['cites_seed']}》"
         items.append(it)

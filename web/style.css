@@ -24,7 +24,7 @@
   --warn-tint: #f3dfd8;
   --gold: #8a6416;
   --gold-tint: #f1e6cc;
-  --d1: #9c5a2e; --d2: #2c6e8f; --d3: #3d7a4e; --d4: #6b5b95; --d5: #a07a22; --d0: #7d827e;
+  --d1: #9c5a2e; --d2: #2c6e8f; --d3: #3d7a4e; --d4: #6b5b95; --d5: #a07a22; --d6: #2f7a74; --d0: #7d827e;
   --shadow: 0 1px 2px rgb(60 50 30 / .06), 0 6px 20px -8px rgb(60 50 30 / .14);
   --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", sans-serif;
   --serif: "Source Serif 4", "Iowan Old Style", Georgia, "Songti SC", serif;
@@ -36,7 +36,7 @@
     --paper: #14191a; --paper-2: #1a2021; --sheet: #1c2324; --ink: #e9e6dd; --ink-2: #bfc3bc; --ink-3: #959b95;
     --rule: #2c3536; --rule-2: #3a4445; --accent: #7fbad0; --accent-ink: #0e1a1f; --accent-tint: #1d3139;
     --insight: #1c2e23; --insight-ink: #c4dfca; --warn: #e79a86; --warn-tint: #3b2420; --gold: #e2bd6a; --gold-tint: #332a17;
-    --d1: #d99a6c; --d2: #79b4cf; --d3: #8cc39a; --d4: #b1a3d6; --d5: #d9b762; --d0: #9aa09b;
+    --d1: #d99a6c; --d2: #79b4cf; --d3: #8cc39a; --d4: #b1a3d6; --d5: #d9b762; --d6: #7cc6bd; --d0: #9aa09b;
     --shadow: 0 1px 2px rgb(0 0 0 / .35), 0 8px 24px -10px rgb(0 0 0 / .5);
     color-scheme: dark;
   }
@@ -45,7 +45,7 @@
   --paper: #14191a; --paper-2: #1a2021; --sheet: #1c2324; --ink: #e9e6dd; --ink-2: #bfc3bc; --ink-3: #959b95;
   --rule: #2c3536; --rule-2: #3a4445; --accent: #7fbad0; --accent-ink: #0e1a1f; --accent-tint: #1d3139;
   --insight: #1c2e23; --insight-ink: #c4dfca; --warn: #e79a86; --warn-tint: #3b2420; --gold: #e2bd6a; --gold-tint: #332a17;
-  --d1: #d99a6c; --d2: #79b4cf; --d3: #8cc39a; --d4: #b1a3d6; --d5: #d9b762; --d0: #9aa09b;
+  --d1: #d99a6c; --d2: #79b4cf; --d3: #8cc39a; --d4: #b1a3d6; --d5: #d9b762; --d6: #7cc6bd; --d0: #9aa09b;
   --shadow: 0 1px 2px rgb(0 0 0 / .35), 0 8px 24px -10px rgb(0 0 0 / .5);
   color-scheme: dark;
 }
@@ -216,6 +216,41 @@ main { min-width: 0; outline: none; }
 .paper h3.serif { font: 600 21px/1.4 var(--serif); }
 .byline { margin: 8px 0 0; font-size: 13px; color: var(--ink-3); line-height: 1.6; }
 .byline .venue { color: var(--ink-2); }
+/* 作者与发表信息 */
+.who { margin: 12px 0 0; display: grid; gap: 3px; font-size: 13.5px; color: var(--ink-2); }
+.who > div { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 10px; }
+.who dt { color: var(--ink-3); font-size: 12.5px; padding-top: 1px; letter-spacing: .04em; }
+.who dd { margin: 0; }
+.who b { color: var(--ink); font-weight: 600; }
+.who .aff { color: var(--ink-3); margin-left: 6px; }
+.who .st { margin-left: 6px; font-size: 12px; padding: 0 7px; border-radius: 999px; background: var(--paper-2); color: var(--ink-2); }
+.who .na { color: var(--ink-3); }
+.who.compact { display: block; margin: 6px 0 0; font-size: 13px; }
+.who.compact .aff { margin-left: 4px; }
+.who.compact .aff::before { content: "（"; }
+.who.compact .aff::after { content: "）"; }
+.tag.top { background: color-mix(in srgb, var(--d1) 16%, var(--sheet)); color: var(--d1); }
+.tag.top-inst { background: color-mix(in srgb, var(--d4) 16%, var(--sheet)); color: var(--d4); }
+.skim .m .tag { font-size: 11.5px; line-height: 18px; }
+
+/* 花费 */
+.cost { padding: 0 12px; }
+.cost-big { display: flex; align-items: baseline; gap: 8px; }
+.cost-big b { font: 600 26px/1.1 var(--serif); color: var(--ink); }
+.cost-big span { font-size: 12.5px; color: var(--ink-3); }
+.cost-line { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
+.cost-note { margin: 8px 0 0; font-size: 11.5px; color: var(--ink-3); line-height: 1.6; }
+.cost-days { margin-top: 8px; }
+.cost-days summary { cursor: pointer; font-size: 13px; color: var(--accent); list-style: none; display: flex; align-items: center; gap: 4px; width: fit-content; }
+.cost-days summary::-webkit-details-marker { display: none; }
+.cost-days summary .ic { width: 14px; height: 14px; transition: transform .2s; }
+.cost-days[open] summary .ic { transform: rotate(180deg); }
+.cost-days ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.cost-days li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) 4.6em; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); }
+.cost-days li i { height: 6px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.cost-days li b { text-align: right; font-weight: 500; color: var(--ink-2); }
+.cost-days li small { margin-left: 2px; color: var(--ink-3); font-weight: 400; }
+
 .tldr { margin: 16px 0 0; font-size: 16.5px; line-height: 1.85; color: var(--ink); max-width: 68ch; }
 
 .insight { margin-top: 18px; padding: 16px 20px; border-radius: var(--radius); background: var(--insight); color: var(--insight-ink); }
@@ -348,6 +383,8 @@ mark { background: color-mix(in srgb, var(--gold) 28%, transparent); color: inhe
   .insight { padding: 14px 14px; margin-left: -4px; margin-right: -4px; }
   .rows { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .rows dd { margin-bottom: 12px; }
+  .who > div { grid-template-columns: 4em minmax(0, 1fr); gap: 8px; }
+  .who .aff { display: inline; }
   .metric { min-width: calc(50% - 11px); }
   .total { margin-left: 0; justify-items: start; flex-basis: 100%; flex-direction: row; display: flex; align-items: baseline; gap: 8px; order: -1; }
   .links { margin-left: -10px; }

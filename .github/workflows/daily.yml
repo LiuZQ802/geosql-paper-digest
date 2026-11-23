@@ -36,6 +36,7 @@ jobs:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+          ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
           S2_API_KEY: ${{ secrets.S2_API_KEY }}
           OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
           TZ: Asia/Shanghai

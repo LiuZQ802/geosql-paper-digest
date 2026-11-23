@@ -31,6 +31,9 @@ profile:
     - name: 时空数据库 / KG 查询
       weight: 0.75
       hint: 时空数据库查询、GeoSPARQL、地学知识图谱问答、Text-to-SPARQL/Cypher
+    - name: 空间数据库 / GIS 原理
+      weight: 0.85
+      hint: 不要求涉及 LLM。空间数据库内核（空间索引、查询处理与优化、空间连接、PostGIS 与时空数据库系统）、空间关系与拓扑理论（DE-9IM、RCC、方向/距离关系）、空间分析方法原理、空间数据模型与标准（OGC Simple Features、坐标参考系），以及其他能帮助 LLM 正确生成空间 SQL 的 GIS 基础研究
     - name: 空间推理 / 地理知识
       weight: 0.6
       hint: LLM 的空间关系、拓扑、方位、距离推理能力，地理知识评测（噪声大，只要特别相关的）
@@ -75,6 +78,9 @@ fetch:
     - '(abs:"SQL agent" OR abs:"database agent" OR abs:"data agent" OR abs:"SQL generation" OR abs:"query generation") AND (abs:"LLM" OR abs:"LLMs" OR abs:"language model")'
     # 遥感 / 空间数据 + LLM 的查询与分析
     - '(abs:"spatial data" OR abs:"vector data" OR abs:"remote sensing database" OR abs:"geodatabase") AND (abs:"LLM" OR abs:"LLMs" OR abs:"language model") AND (abs:query OR abs:code OR abs:SQL)'
+    # 空间数据库 / GIS 原理（不要求 LLM）
+    - '(abs:"spatial index" OR abs:"spatial join" OR abs:"spatial query" OR abs:"spatial database" OR abs:"R-tree" OR abs:"learned spatial index" OR abs:"spatio-temporal database" OR abs:"trajectory database") AND (cat:cs.DB OR cat:cs.DS OR cat:cs.CG)'
+    - 'abs:"topological relations" OR abs:"DE-9IM" OR abs:"region connection calculus" OR abs:"spatial predicates" OR abs:"OGC Simple Features" OR abs:"PostGIS"'
 
   # OpenAlex 检索词（只匹配标题+摘要，词之间是“且”关系，所以每条要短）
   openalex_queries:
@@ -90,6 +96,14 @@ fetch:
     - "Earth Engine language model"
     - "GeoSPARQL"
     - "spatial database language model"
+    # 空间数据库 / GIS 原理（不要求 LLM）
+    - "spatial index"
+    - "spatial join"
+    - "spatial query processing"
+    - "spatial database"
+    - "topological relations"
+    - "spatial data model"
+    - "spatial analysis algorithm"
 
 # ---------- 关键词粗筛（不花钱，先把明显无关的剔掉） ----------
 # 末尾带 * 表示前缀匹配；分数累加，低于 min_score 的直接丢弃
@@ -112,6 +126,16 @@ prefilter:
     sql: 1.5
     schema linking: 2
     spatial database*: 3
+    spatial index*: 3
+    spatial join*: 3
+    spatial quer*: 3
+    r-tree*: 3
+    topological relation*: 3
+    de-9im: 4
+    region connection calculus: 3
+    simple features: 2
+    spatial data model*: 3
+    spatial analysis: 2
     geospatial: 2
     gis: 2
     geographic*: 1.5
@@ -141,7 +165,53 @@ llm:
 
 # ---------- 选择规则 ----------
 select:
-  max_deep: 5          # 精读篇数上限
-  max_skim: 10         # 速览篇数上限
-  deep_min_score: 7.0  # 精读门槛（宁缺毋滥）
-  skim_min_score: 5.5  # 速览门槛
+  max_deep: 5            # 精读篇数上限
+  max_skim: 10           # 速览篇数上限
+  deep_min_score: 6.5    # 精读的内容分门槛
+  deep_quality: [A, B]   # 精读还要求发表质量：A = 顶会顶刊或顶尖单位；B = 知名会议期刊或知名单位
+  skim_min_score: 5.5    # 速览门槛
+  max_shortlist: 25      # 最多给多少篇候选补全作者/单位/期刊信息
+
+# ---------- 发表质量 ----------
+quality:
+  # 顶会顶刊参考名单（LLM 判断 venue_tier=top 时参考；不在名单里的也可能被判为 top）
+  top_venues:
+    # NLP / AI
+    - ACL
+    - EMNLP
+    - NAACL
+    - NeurIPS
+    - ICML
+    - ICLR
+    - AAAI
+    - IJCAI
+    - COLM
+    # 数据库 / 数据挖掘 / 信息检索
+    - SIGMOD
+    - VLDB / PVLDB
+    - ICDE
+    - KDD
+    - WWW
+    - SIGIR
+    - TKDE
+    - VLDB Journal
+    - TOIS
+    # 软件工程（代码生成）
+    - ICSE
+    - FSE
+    - ASE
+    - TOSEM
+    # GIS / 遥感 / 地学
+    - International Journal of Geographical Information Science (IJGIS)
+    - ISPRS Journal of Photogrammetry and Remote Sensing
+    - Remote Sensing of Environment
+    - Annals of the American Association of Geographers
+    - Computers, Environment and Urban Systems
+    - ACM SIGSPATIAL
+    - IEEE TGRS
+    - International Journal of Applied Earth Observation and Geoinformation (JAG)
+    - International Journal of Digital Earth
+    - Transactions in GIS
+    # 信息系统
+    - Information Processing & Management
+    - Expert Systems with Applications
