@@ -12,6 +12,12 @@ UA = "geo-sql-paper-digest/1.0 (academic literature monitor)"
 _session = requests.Session()
 _session.headers["User-Agent"] = UA
 
+# 出版社接口要用机构网络出口（不走本机代理），否则拿不到授权全文
+DIRECT_HOSTS = ("api.elsevier.com", "link.springer.com", "api.springernature.com")
+_direct = requests.Session()
+_direct.trust_env = False          # 忽略 HTTP(S)_PROXY 环境变量
+_direct.headers["User-Agent"] = UA
+
 
 def log(*args):
     print("[digest]", *args, file=sys.stderr, flush=True)
@@ -20,9 +26,10 @@ def log(*args):
 def _request(method, url, retries=4, backoff=5, **kw):
     kw.setdefault("timeout", 60)
     last = None
+    sess = _direct if any(h in url for h in DIRECT_HOSTS) else _session
     for i in range(retries):
         try:
-            r = _session.request(method, url, **kw)
+            r = sess.request(method, url, **kw)
             if r.status_code in (429, 500, 502, 503, 504):
                 last = f"HTTP {r.status_code}"
                 time.sleep(backoff * (i + 1))

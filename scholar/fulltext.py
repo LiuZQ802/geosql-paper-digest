@@ -60,6 +60,9 @@ def get_fulltext(paper, max_chars=60000):
     if (paper.get("doi") or "").startswith("10.1016/"):
         from .access import elsevier_fulltext
         attempts.append(("Elsevier 全文", lambda: elsevier_fulltext(paper["doi"])))
+    from .access import springer_pdf_url
+    if springer_pdf_url(paper.get("doi")):
+        attempts.append(("Springer 全文", lambda: from_pdf(springer_pdf_url(paper["doi"]))))
     for name, fn in attempts:
         try:
             text = fn()

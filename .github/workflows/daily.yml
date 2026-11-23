@@ -2,7 +2,7 @@ name: daily-digest
 
 on:
   schedule:
-    - cron: "30 1 * * *"   # 每天 UTC 01:30 = 北京时间 09:30（arXiv 每日更新之后）
+    - cron: "0 3 * * *"    # 北京时间 11:00 兜底：本机 09:00 已经跑过就跳过（见 run_daily.ps1）
   workflow_dispatch:        # 也可以在 Actions 页面手动运行
   push:
     branches: [main]
@@ -30,20 +30,31 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Check whether the local run already happened today
+        id: local
+        run: |
+          today=$(TZ=Asia/Shanghai date +%F)
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(cat state/last_local_run.txt 2>/dev/null)" = "$today" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "本机今天已运行，云端跳过"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run pipeline
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && steps.local.outputs.skip != 'true'
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
+          SPRINGER_META_KEY: ${{ secrets.SPRINGER_META_KEY }}
           S2_API_KEY: ${{ secrets.S2_API_KEY }}
           OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
           TZ: Asia/Shanghai
         run: python -m scholar.main
 
       - name: Commit data
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && steps.local.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

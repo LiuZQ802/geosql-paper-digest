@@ -2,8 +2,10 @@
 
 OpenAlex 拿不到大多数 Elsevier 期刊的摘要（出版社不授权），这里按顺序补：
   1. Elsevier 官方 API（需要 ELSEVIER_API_KEY；摘要任何网络都能拿到，全文需要机构授权的 IP 或 ELSEVIER_INSTTOKEN）
-  2. Semantic Scholar 批量接口
-  3. Crossref（部分出版社会存摘要）
+  2. Springer Nature Meta API（需要 SPRINGER_META_KEY；任何网络都能用）
+  3. Semantic Scholar 批量接口
+  4. Crossref（部分出版社会存摘要）
+全文：Elsevier API / Springer PDF 需要机构授权的网络出口（本机直连学校线路时可用，云端拿不到）。
 """
 import os
 import re
@@ -54,6 +56,29 @@ def elsevier_fulltext(doi):
         return None
 
 
+SPRINGER_PREFIXES = ("10.1007/", "10.1186/", "10.1038/", "10.1140/", "10.1023/", "10.1057/", "10.1365/")
+
+
+def springer_abstract(doi):
+    if not os.getenv("SPRINGER_META_KEY") or not doi.startswith(SPRINGER_PREFIXES):
+        return None
+    try:
+        r = http_get("https://api.springernature.com/meta/v2/json", retries=2, timeout=30,
+                     params={"q": f"doi:{doi}", "api_key": os.environ["SPRINGER_META_KEY"]})
+        recs = r.json().get("records") or [] if r.status_code == 200 else []
+        ab = recs[0].get("abstract") if recs else None
+        if isinstance(ab, dict):  # 有时是 {"h1": "Abstract", "p": "..."}
+            ab = " ".join(v if isinstance(v, str) else " ".join(v) for k, v in ab.items() if k != "h1")
+        return _clean(ab)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def springer_pdf_url(doi):
+    """Springer 期刊/会议论文 PDF（有机构授权的网络出口才能下到付费论文）。"""
+    return f"https://link.springer.com/content/pdf/{doi}.pdf" if (doi or "").startswith("10.1007/") else None
+
+
 def s2_abstracts(dois):
     out = {}
     for i in range(0, len(dois), 100):
@@ -89,12 +114,17 @@ def recover_abstracts(papers):
     todo = [p for p in papers if not p.get("abstract") and p.get("doi")]
     if not todo:
         return
-    got = {"Elsevier": 0, "S2": 0, "Crossref": 0}
+    got = {"Elsevier": 0, "Springer": 0, "S2": 0, "Crossref": 0}
     for p in todo:
         a = elsevier_abstract(p["doi"])
         if a:
             p["abstract"], p["abstract_src"] = a, "Elsevier"
             got["Elsevier"] += 1
+        else:
+            a = springer_abstract(p["doi"])
+            if a:
+                p["abstract"], p["abstract_src"] = a, "Springer"
+                got["Springer"] += 1
     rest = [p for p in todo if not p.get("abstract")]
     s2 = s2_abstracts([p["doi"] for p in rest])
     for p in rest:
