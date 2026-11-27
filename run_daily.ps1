@@ -32,5 +32,11 @@ if ($LASTEXITCODE -ne 0) { Log "pipeline failed (exit $LASTEXITCODE)，交给云
 Set-Content -Path "$Root\state\last_local_run.txt" -Value $Today -Encoding ASCII
 git add web/data state 2>&1 | Out-Null
 git commit --quiet -m "digest: $Today (local)" 2>&1 | ForEach-Object { Log "git: $_" }
-git push --quiet 2>&1 | ForEach-Object { Log "git: $_" }
+# 推送前先合并远程（网页上传的解析结果可能刚提交过），失败就重试
+foreach ($i in 1..5) {
+    git pull --rebase --quiet 2>&1 | ForEach-Object { Log "git: $_" }
+    git push --quiet 2>&1 | ForEach-Object { Log "git: $_" }
+    if ($LASTEXITCODE -eq 0) { break }
+    Start-Sleep -Seconds (5 * $i)
+}
 Log "done"

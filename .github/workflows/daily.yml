@@ -1,21 +1,39 @@
 name: daily-digest
+run-name: ${{ github.event.inputs.request_id != '' && format('解析 {0}', github.event.inputs.request_id) || '' }}
 
 on:
   schedule:
     - cron: "0 3 * * *"    # 北京时间 11:00 兜底：本机 09:00 已经跑过就跳过（见 run_daily.ps1）
-  workflow_dispatch:        # 也可以在 Actions 页面手动运行
+  workflow_dispatch:        # 在 Actions 页面手动运行；网页“添加论文”也走这里（带 request_id）
+    inputs:
+      request_id:
+        description: "网页提交的单篇解析请求编号（留空 = 运行每日流程）"
+        required: false
+        default: ""
+      request:
+        description: "加密的请求内容（网页生成）"
+        required: false
+        default: ""
+      file:
+        description: "inbox 分支上加密 PDF 的路径（上传 PDF 时）"
+        required: false
+        default: ""
   push:
     branches: [main]
-    paths: ["web/**"]       # 只改了页面样式时，直接重新部署
+    paths: ["web/**"]       # 只改了页面或数据时，直接重新部署
 
 permissions:
   contents: write
   pages: write
   id-token: write
 
+# 每日流程排队执行；每个单篇解析请求各自独立运行，互不取消
 concurrency:
-  group: daily-digest
+  group: ${{ github.event.inputs.request_id != '' && format('manual-{0}', github.event.inputs.request_id) || 'daily-digest' }}
   cancel-in-progress: false
+
+env:
+  MANUAL: ${{ github.event.inputs.request_id != '' }}
 
 jobs:
   build:
@@ -30,8 +48,15 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # ---------------- 每日流程 ----------------
       - name: Check whether the local run already happened today
         id: local
+        if: env.MANUAL != 'true'
         run: |
           today=$(TZ=Asia/Shanghai date +%F)
           if [ "${{ github.event_name }}" = "schedule" ] && [ "$(cat state/last_local_run.txt 2>/dev/null)" = "$today" ]; then
@@ -40,8 +65,8 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run pipeline
-        if: github.event_name != 'push' && steps.local.outputs.skip != 'true'
+      - name: Run daily pipeline
+        if: github.event_name != 'push' && env.MANUAL != 'true' && steps.local.outputs.skip != 'true'
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
@@ -53,14 +78,66 @@ jobs:
           TZ: Asia/Shanghai
         run: python -m scholar.main
 
-      - name: Commit data
-        if: github.event_name != 'push' && steps.local.outputs.skip != 'true'
+      - name: Commit daily data
+        if: github.event_name != 'push' && env.MANUAL != 'true' && steps.local.outputs.skip != 'true'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add web/data state
-          git diff --cached --quiet || git commit -m "digest: $(TZ=Asia/Shanghai date +%F)"
-          git push
+          git diff --cached --quiet && exit 0
+          git commit -m "digest: $(TZ=Asia/Shanghai date +%F)"
+          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && exit 0; sleep $((i * 5)); done
+          exit 1
+
+      # ---------------- 网页提交的单篇解析 ----------------
+      - name: Fetch uploaded PDF
+        if: env.MANUAL == 'true' && github.event.inputs.file != ''
+        env:
+          FILE: ${{ github.event.inputs.file }}
+        run: |
+          case "$FILE" in inbox/*.enc) ;; *) echo "bad file path"; exit 1;; esac
+          git fetch -q origin inbox
+          git show "origin/inbox:$FILE" > "$RUNNER_TEMP/upload.enc"
+
+      - name: Analyze submitted paper
+        if: env.MANUAL == 'true'
+        env:
+          REQUEST: ${{ github.event.inputs.request }}
+          REQUEST_ID: ${{ github.event.inputs.request_id }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+          ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
+          SPRINGER_META_KEY: ${{ secrets.SPRINGER_META_KEY }}
+          S2_API_KEY: ${{ secrets.S2_API_KEY }}
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+        run: python -m scholar.manual --id "$REQUEST_ID" --file "$RUNNER_TEMP/upload.enc"
+
+      - name: Commit result (rebuild index on conflict)
+        if: env.MANUAL == 'true'
+        env:
+          REQUEST_ID: ${{ github.event.inputs.request_id }}
+          SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+        run: |
+          id=$(echo "$REQUEST_ID" | tr -cd 'A-Za-z0-9_-')
+          cp "web/data/uploads/$id.json" "$RUNNER_TEMP/result.json"
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            mkdir -p web/data/uploads && cp "$RUNNER_TEMP/result.json" "web/data/uploads/$id.json"
+            python -m scholar.manual --reindex
+            git add web/data/uploads
+            git commit -q -m "upload: $id" || exit 0
+            git push -q && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
+
+      - name: Remove uploaded PDF from inbox
+        if: env.MANUAL == 'true' && github.event.inputs.file != ''
+        env:
+          FILE: ${{ github.event.inputs.file }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api "repos/${{ github.repository }}/contents/$FILE?ref=inbox" --jq .sha) || exit 0
+          gh api -X DELETE "repos/${{ github.repository }}/contents/$FILE" -f message="processed $FILE" -f sha="$sha" -f branch=inbox >/dev/null
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -69,6 +146,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

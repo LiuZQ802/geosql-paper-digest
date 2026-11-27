@@ -29,7 +29,7 @@ const PAGE = 10;   // 每次加载的天数
 const KEY_STORE = "vault-key";
 
 const state = {
-  key: null, index: null, days: new Map(), shown: PAGE,
+  key: null, rawKey: null, index: null, days: new Map(), shown: PAGE,
   view: "feed", q: "", onlyDeep: store.get("onlyDeep", false), zh: store.get("zh", true),
   hidden: new Set(store.get("hiddenDirs", [])), stars: store.get("stars", {}), absLang: {},
 };
@@ -74,6 +74,7 @@ async function boot() {
   if (saved) {
     try {
       state.key = await importKey(b64(saved));
+      state.rawKey = saved;
       if ((await decrypt(state.key, meta.check)) === "geosql-digest-ok") return start(true);
     } catch { store.del(KEY_STORE); }
   }
@@ -94,6 +95,7 @@ function showGate(meta) {
       const key = await importKey(raw);
       if ((await decrypt(key, meta.check)) !== "geosql-digest-ok") throw new Error("bad");
       state.key = key;
+      state.rawKey = ub64(raw);
       store.set(KEY_STORE, ub64(raw), $("#remember").checked ? localStorage : sessionStorage);
       $("#gate").hidden = true;
       start(true);
@@ -136,6 +138,12 @@ async function start(locked = false) {
   renderCost();
   renderDates();
   await render();
+  loadUploadIndex().then((ix) => {
+    const done = new Set((ix.items || []).map((i) => i.id));
+    const pending = store.get(PENDING_KEY, []).filter((x) => !done.has(x.id));
+    updateUpBadge((ix.items || []).length, pending.length);
+    schedulePoll(pending.length > 0);
+  });
   if (location.hash.length > 1) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
 }
 
@@ -339,6 +347,7 @@ async function render() {
   const n = Object.keys(state.stars).length;
   $("#star-n").textContent = n || "";
   if (state.view === "stars") return renderStars();
+  if (state.view === "uploads") return renderUploads();
   return renderFeed();
 }
 
@@ -391,6 +400,8 @@ function findPaper(uid) {
     const p = day && [...day.deep, ...day.skim].find((x) => x.uid === uid);
     if (p) return { p, date };
   }
+  const u = up.papers.get(uid);
+  if (u) return { p: u.paper, date: "我的上传" };
   return state.stars[uid] || null;
 }
 
@@ -410,7 +421,8 @@ document.addEventListener("click", async (e) => {
     document.getElementById(`day-${t.dataset.date}`)?.scrollIntoView({ behavior: "smooth" });
     return;
   }
-  if (t.dataset.view) { state.view = t.dataset.view; closeRail(); return render(); }
+  if (t.dataset.view) { state.view = t.dataset.view; state.q = ""; $("#q").value = ""; closeRail(); return render(); }
+  if (handleUploadClick(t)) return;
   if (t.dataset.dir) {
     const d = t.dataset.dir;
     state.hidden.has(d) ? state.hidden.delete(d) : state.hidden.add(d);
@@ -471,5 +483,270 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "/" && document.activeElement?.tagName !== "INPUT") { e.preventDefault(); $("#q").focus(); }
   if (e.key === "Escape" && document.activeElement === $("#q")) { $("#q").value = ""; state.q = ""; render(); }
 });
+
+
+/* ================= 添加论文（链接 / PDF → 云端解析） ================= */
+const REPO = "LiuZQ802/geosql-paper-digest";
+const TOKEN_KEY = "gh-token";
+const PENDING_KEY = "uploads-pending";
+const MAX_PDF = 20 * 1024 * 1024;
+const MODE_HINT = {
+  auto: "按内容打分：达到精读线就读全文写完整解读，否则只写速览",
+  deep: "不管分数高低，都读全文写完整解读（花费比速览高）",
+  skim: "只打分、写一句话点评、翻译摘要（花费很少）",
+};
+const up = { src: "url", mode: "auto", file: null, index: null, cache: new Map(), papers: new Map(), runs: {}, timer: null };
+
+function bytesToB64(bytes) {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+async function encryptBytes(bytes) {
+  const k = await crypto.subtle.importKey("raw", b64(state.rawKey), "AES-GCM", false, ["encrypt"]);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, k, bytes));
+  return { v: 1, iv: bytesToB64(iv), ct: bytesToB64(ct) };
+}
+const encryptJSON = (obj) => encryptBytes(new TextEncoder().encode(JSON.stringify(obj)));
+
+async function gh(path, opts = {}) {
+  const r = await fetch(`https://api.github.com${path}`, {
+    ...opts,
+    headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${store.get(TOKEN_KEY, "")}`,
+      "X-GitHub-Api-Version": "2022-11-28", ...(opts.headers || {}) },
+  });
+  if (!r.ok) {
+    let detail = "";
+    try { detail = (await r.json()).message || ""; } catch { /* */ }
+    const msg = r.status === 401 ? "GitHub 令牌无效或已过期，请点“更换 GitHub 令牌”重新填写。"
+      : (r.status === 403 || r.status === 404) ? "这个 GitHub 令牌没有权限：请确认创建令牌时选了 geosql-paper-digest 仓库，并且 Actions 和 Contents 都设为 Read and write。"
+      : r.status === 422 ? `GitHub 拒绝了请求：${detail}` : `GitHub 返回 ${r.status}：${detail}`;
+    const err = new Error(msg);
+    err.status = r.status;
+    throw err;
+  }
+  if (r.status === 204) return null;
+  try { return await r.json(); } catch { return null; }
+}
+
+function newId() {
+  const d = new Date(), p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${Math.random().toString(36).slice(2, 6)}`;
+}
+function addMsg(kind, html) {
+  const el = $("#add-msg");
+  if (!kind) { el.hidden = true; return; }
+  el.className = `add-msg ${kind}`;
+  el.innerHTML = `${icon({ err: "alert", info: "clock", ok: "bulb" }[kind])}<span>${html}</span>`;
+  el.hidden = false;
+}
+function openAdd(open, prefill) {
+  $("#add-panel").hidden = !open;
+  $("#add-toggle").setAttribute("aria-expanded", String(open));
+  if (!open) return;
+  const hasToken = !!store.get(TOKEN_KEY, "");
+  $("#token-box").hidden = hasToken;
+  $("#token-reset").hidden = !hasToken;
+  if (!state.rawKey) addMsg("err", "本地预览模式没有加密密钥，不能提交。请在正式网页上登录后使用。");
+  if (prefill) { setSrc("url"); $("#add-url").value = prefill; }
+  scrollTo({ top: 0, behavior: "smooth" });
+  (up.src === "url" ? $("#add-url") : $("#add-file")).focus();
+}
+function setSrc(src) {
+  up.src = src;
+  document.querySelectorAll("[data-src]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.src === src)));
+  $("#src-url").hidden = src !== "url";
+  $("#src-pdf").hidden = src !== "pdf";
+  addMsg(null);
+}
+function setFile(f) {
+  if (f && !(f.type === "application/pdf" || /\.pdf$/i.test(f.name))) { addMsg("err", "只能上传 PDF 文件。"); f = null; }
+  else if (f && f.size > MAX_PDF) { addMsg("err", `文件太大（${(f.size / 1048576).toFixed(1)} MB），最大 20 MB。`); f = null; }
+  else addMsg(null);
+  up.file = f;
+  $("#drop").classList.toggle("has-file", !!f);
+  $("#drop-text").textContent = f ? `${f.name}（${(f.size / 1048576).toFixed(1)} MB）` : "把 PDF 拖到这里，或点击选择文件";
+  if (!f) $("#add-file").value = "";
+}
+const looksValid = (v) => /^https?:\/\/\S+\.\S+/i.test(v) || /^10\.\d{4,9}\/\S+$/.test(v) || /^(arxiv:)?\s*\d{4}\.\d{4,5}(v\d+)?$/i.test(v);
+
+async function submitPaper() {
+  if (!state.rawKey) return addMsg("err", "本地预览模式没有加密密钥，不能提交。请在正式网页上登录后使用。");
+  const typed = $("#add-token").value.trim();
+  if (typed) store.set(TOKEN_KEY, typed);
+  if (!store.get(TOKEN_KEY, "")) {
+    $("#token-box").hidden = false;
+    $("#add-token").focus();
+    return addMsg("err", "第一次使用请先填写 GitHub 令牌。");
+  }
+
+  let req, label;
+  if (up.src === "url") {
+    const url = $("#add-url").value.trim();
+    if (!url) return addMsg("err", "请粘贴论文链接、DOI 或 arXiv 编号。");
+    if (!looksValid(url)) return addMsg("err", "格式不对：请粘贴完整网址（http 开头）、DOI（如 10.1016/j.xxx）或 arXiv 编号（如 2509.25264）。");
+    req = { kind: "url", url };
+    label = url;
+  } else {
+    if (!up.file) return addMsg("err", "请先选择一个 PDF 文件。");
+    req = { kind: "pdf", name: up.file.name };
+    label = up.file.name;
+  }
+  const id = newId();
+  Object.assign(req, { mode: up.mode, submitted_at: new Date().toISOString() });
+  const btn = $("#add-submit");
+  btn.disabled = true;
+  try {
+    let file = "";
+    if (req.kind === "pdf") {
+      addMsg("info", "正在加密并上传 PDF…");
+      const blob = await encryptBytes(new Uint8Array(await up.file.arrayBuffer()));
+      file = `inbox/${id}.pdf.enc`;
+      await gh(`/repos/${REPO}/contents/${file}`, { method: "PUT", body: JSON.stringify({
+        message: `upload ${id}`, branch: "inbox", content: bytesToB64(new TextEncoder().encode(JSON.stringify(blob))) }) });
+    }
+    addMsg("info", "正在提交解析任务…");
+    await gh(`/repos/${REPO}/actions/workflows/daily.yml/dispatches`, { method: "POST", body: JSON.stringify({
+      ref: "main", inputs: { request_id: id, request: JSON.stringify(await encryptJSON(req)), file } }) });
+    const pending = store.get(PENDING_KEY, []);
+    pending.unshift({ id, label, kind: req.kind, mode: req.mode, at: req.submitted_at });
+    store.set(PENDING_KEY, pending.slice(0, 50));
+    $("#add-url").value = "";
+    $("#add-token").value = "";
+    setFile(null);
+    $("#token-box").hidden = true;
+    $("#token-reset").hidden = false;
+    addMsg("ok", "已提交，云端大约 2–5 分钟完成。结果会出现在下面的“我的上传”里，页面会自动刷新。");
+    state.view = "uploads";
+    state.q = "";
+    $("#q").value = "";
+    render();
+  } catch (e) {
+    if ([401, 403, 404].includes(e.status)) $("#token-box").hidden = false;
+    addMsg("err", esc(e.message || String(e)));
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---------- 我的上传 ---------- */
+async function loadUploadIndex() {
+  try { up.index = await fetchJSON(`data/uploads/index.json?t=${Date.now()}`); } catch { up.index = { items: [] }; }
+  return up.index;
+}
+function loadUpload(id) {
+  if (!up.cache.has(id)) {
+    up.cache.set(id, fetchJSON(`data/uploads/${id}.json`).then((it) => {
+      if (it?.paper) up.papers.set(it.paper.uid, it);
+      return it;
+    }).catch(() => null));
+  }
+  return up.cache.get(id);
+}
+async function refreshRuns(pending) {
+  if (!store.get(TOKEN_KEY, "") || !pending.length) return;
+  try {
+    const res = await gh(`/repos/${REPO}/actions/runs?event=workflow_dispatch&per_page=30`);
+    for (const run of res?.workflow_runs || []) {
+      const m = /^解析 (\S+)$/.exec(run.display_title || "");
+      if (m) up.runs[m[1]] = { status: run.status, conclusion: run.conclusion, url: run.html_url };
+    }
+  } catch { /* 查询失败不影响展示 */ }
+}
+const mins = (iso) => Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+const MODE_NAME = { auto: "自动判断", deep: "精读", skim: "速览" };
+
+function pendingCard(p) {
+  const run = up.runs[p.id] || {};
+  const failed = run.status === "completed" && run.conclusion !== "success";
+  let chip = `<span class="chip wait">${icon("clock")}已提交</span>`, note = "";
+  if (["queued", "waiting", "pending", "requested"].includes(run.status)) chip = `<span class="chip wait">${icon("clock")}排队中</span>`;
+  else if (run.status === "in_progress") chip = `<span class="chip wait">${icon("clock")}解析中</span>`;
+  else if (run.status === "completed" && !failed) { chip = `<span class="chip wait">${icon("clock")}即将显示</span>`; note = "解析已完成，网页正在更新（约 1 分钟）。"; }
+  else if (failed) { chip = `<span class="chip fail">${icon("alert")}任务失败</span>`; note = `云端任务没有跑完（${esc(run.conclusion)}）。<a href="${esc(run.url)}" target="_blank" rel="noopener">查看日志</a>，或重新提交。`; }
+  return `<div class="up-item"><div class="up-status">${chip}<span>${MODE_NAME[p.mode] || ""} · 提交于 ${mins(p.at)} 分钟前</span></div>
+    <div class="up-card${failed ? " fail" : ""}"><h3>${esc(p.label)}</h3>${note ? `<p>${note}</p>` : ""}
+    ${failed ? `<div class="actions"><button data-forget="${esc(p.id)}">从列表移除</button>${p.kind === "url" ? `<button data-retry="${esc(p.label)}">重新提交</button>` : `<button data-upload-pdf>重新上传</button>`}</div>` : ""}</div></div>`;
+}
+function resultCard(it) {
+  const when = it.finished_at ? new Date(it.finished_at).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+  if (it.status !== "done") {
+    return `<div class="up-item"><div class="up-status"><span class="chip fail">${icon("alert")}解析失败</span><span>${esc(when)}</span></div>
+      <div class="up-card fail"><h3>${esc(it.input || it.title || "")}</h3><p>${esc(it.message || "未知错误")}</p>
+      <div class="actions">${it.kind === "url" ? `<button data-retry="${esc(it.input)}">修改后重新提交</button>` : ""}<button data-upload-pdf>改为上传 PDF</button></div></div></div>`;
+  }
+  const p = it.paper;
+  const notes = (it.notes || []).map((n) => `<span class="chip fail">${icon("alert")}${esc(n)}</span>`).join("");
+  const cost = it.cost?.usd != null ? ` · 花费 ${money(it.cost.usd)}` : "";
+  return `<div class="up-item"><div class="up-status"><span class="chip done">${it.mode_final === "deep" ? "精读" : "速览"}</span>
+      <span class="up-reason">${esc(it.reason || "")}${cost} · ${esc(when)}</span>${notes}</div>
+    ${it.mode_final === "deep" && p.digest ? paperDeep(p) : `<div class="skims">${paperSkim(p)}</div>`}</div>`;
+}
+
+async function renderUploads() {
+  $("#more-wrap").hidden = true;
+  await loadUploadIndex();
+  const items = up.index.items || [];
+  const done = new Set(items.map((i) => i.id));
+  const pending = store.get(PENDING_KEY, []).filter((p) => !done.has(p.id));
+  store.set(PENDING_KEY, pending);
+  await refreshRuns(pending);
+  const results = await Promise.all(items.map((i) => loadUpload(i.id)));
+  updateUpBadge(items.length, pending.length);
+  if (state.view !== "uploads") return;
+  $("#feed").innerHTML = `<section class="day"><header class="day-head"><h2>我的上传</h2>
+      <span class="stat">手动添加的论文 · 已完成 ${items.length} 篇${pending.length ? ` · ${pending.length} 篇处理中，页面每 20 秒自动刷新` : ""}</span></header>
+    ${pending.map(pendingCard).join("")}${results.filter(Boolean).map(resultCard).join("")}
+    ${!items.length && !pending.length ? `<div class="empty"><b>还没有上传过论文</b>点右上角的“添加论文”，粘贴链接或上传 PDF 就能解析。<br><button data-open-add>添加论文</button></div>` : ""}
+  </section>`;
+  schedulePoll(pending.length > 0);
+}
+function updateUpBadge(n, pendingN) { $("#up-n").textContent = pendingN ? `${pendingN} 处理中` : (n || ""); }
+function schedulePoll(on) {
+  clearTimeout(up.timer);
+  if (!on) return;
+  up.timer = setTimeout(async () => {
+    if (state.view === "uploads") return renderUploads();
+    await loadUploadIndex();
+    const done = new Set((up.index.items || []).map((i) => i.id));
+    const pending = store.get(PENDING_KEY, []).filter((p) => !done.has(p.id));
+    store.set(PENDING_KEY, pending);
+    updateUpBadge((up.index.items || []).length, pending.length);
+    schedulePoll(pending.length > 0);
+  }, 20000);
+}
+
+function handleUploadClick(t) {
+  if (t.id === "add-toggle") { openAdd($("#add-panel").hidden); return true; }
+  if (t.id === "add-close") { openAdd(false); return true; }
+  if (t.id === "add-submit") { submitPaper(); return true; }
+  if (t.id === "token-reset") { store.del(TOKEN_KEY); $("#token-box").hidden = false; t.hidden = true; $("#add-token").focus(); return true; }
+  if (t.dataset.src) { setSrc(t.dataset.src); return true; }
+  if (t.dataset.mode) {
+    up.mode = t.dataset.mode;
+    document.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b === t)));
+    $("#mode-hint").textContent = MODE_HINT[up.mode];
+    return true;
+  }
+  if (t.hasAttribute("data-open-add")) { openAdd(true); return true; }
+  if (t.hasAttribute("data-upload-pdf")) { openAdd(true); setSrc("pdf"); return true; }
+  if (t.dataset.retry) { openAdd(true, t.dataset.retry); return true; }
+  if (t.dataset.forget) {
+    store.set(PENDING_KEY, store.get(PENDING_KEY, []).filter((p) => p.id !== t.dataset.forget));
+    renderUploads();
+    return true;
+  }
+  return false;
+}
+
+(function wireUploads() {
+  const drop = $("#drop"), input = $("#add-file");
+  input.addEventListener("change", () => setFile(input.files[0] || null));
+  ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => setFile(e.dataTransfer.files[0] || null));
+  $("#add-url").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submitPaper(); } });
+})();
 
 boot();

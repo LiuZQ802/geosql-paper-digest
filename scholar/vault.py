@@ -50,6 +50,16 @@ def _decrypt(key, blob):
     return json.loads(AESGCM(key).decrypt(_unb64(blob["iv"]), _unb64(blob["ct"]), None))
 
 
+def decrypt_blob(blob):
+    """解密网页端用同一密钥加密的 JSON（如用户提交的解析请求）。"""
+    return _decrypt(key(), blob)
+
+
+def decrypt_bytes(blob):
+    """解密网页端加密上传的二进制文件（PDF）。"""
+    return AESGCM(key()).decrypt(_unb64(blob["iv"]), _unb64(blob["ct"]), None)
+
+
 def key():
     """取得（必要时创建）站点密钥。密码变了会重建 vault.json，旧数据需用 rekey 重新加密。"""
     global _key
@@ -94,7 +104,7 @@ def save(path: Path, obj):
 
 
 def _all_data_files():
-    return [DATA / "index.json", *sorted((DATA / "daily").glob("*.json"))]
+    return [DATA / "index.json", *sorted((DATA / "daily").glob("*.json")), *sorted((DATA / "uploads").glob("*.json"))]
 
 
 def encrypt_all():

@@ -31,6 +31,11 @@
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
     <symbol id="i-cite" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
     <symbol id="i-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.74V16h8v-1.26A7 7 0 0 0 12 2z"/></symbol>
   </defs>
 </svg>
@@ -66,6 +71,7 @@
           <span class="sr-only">搜索</span>
           <input id="q" type="search" placeholder="搜索标题、解读、标签" autocomplete="off" enterkeyhint="search">
         </label>
+        <button id="add-toggle" class="btn-add" aria-expanded="false" aria-controls="add-panel"><svg class="ic"><use href="#i-plus"/></svg><span>添加论文</span></button>
         <button id="filter-toggle" class="icon-btn only-narrow" aria-expanded="false" aria-controls="rail" title="筛选"><svg class="ic"><use href="#i-filter"/></svg><span class="sr-only">筛选</span><span id="filter-dot" class="dot" hidden></span></button>
         <button id="theme" class="icon-btn" title="切换深浅色"><svg class="ic"><use id="theme-ic" href="#i-moon"/></svg><span class="sr-only">切换深浅色</span></button>
         <button id="logout" class="icon-btn" title="退出登录" hidden><svg class="ic"><use href="#i-out"/></svg><span class="sr-only">退出登录</span></button>
@@ -84,6 +90,7 @@
       <nav class="views" aria-label="视图">
         <button data-view="feed" class="on">全部推荐</button>
         <button data-view="stars">收藏<span id="star-n" class="n"></span></button>
+        <button data-view="uploads">我的上传<span id="up-n" class="n"></span></button>
       </nav>
 
       <section class="rail-sec">
@@ -109,6 +116,51 @@
     </aside>
 
     <main id="main" tabindex="-1">
+      <section id="add-panel" class="add-panel" hidden aria-labelledby="add-title">
+        <div class="add-head">
+          <h2 id="add-title">添加一篇论文</h2>
+          <button id="add-close" class="icon-btn" title="收起"><svg class="ic"><use href="#i-x"/></svg><span class="sr-only">收起</span></button>
+        </div>
+        <div class="seg seg-lg" role="tablist" aria-label="添加方式">
+          <button data-src="url" aria-pressed="true"><svg class="ic"><use href="#i-link"/></svg>链接 / DOI / arXiv</button>
+          <button data-src="pdf" aria-pressed="false"><svg class="ic"><use href="#i-upload"/></svg>上传 PDF</button>
+        </div>
+        <div id="src-url" class="src">
+          <label class="field"><span class="sr-only">论文链接</span><svg class="ic"><use href="#i-link"/></svg>
+            <input id="add-url" type="text" inputmode="url" placeholder="https://arxiv.org/abs/…、https://doi.org/10.…、10.1016/…、2509.25264" autocomplete="off"></label>
+          <p class="hint">支持 arXiv、DOI、期刊论文页面和 PDF 直链。付费网站（如 Taylor &amp; Francis、Wiley、IEEE）常拦截程序访问，打不开时会提示你改为上传 PDF。</p>
+        </div>
+        <div id="src-pdf" class="src" hidden>
+          <label id="drop" class="drop">
+            <input id="add-file" type="file" accept="application/pdf,.pdf" class="sr-only">
+            <svg class="ic"><use href="#i-upload"/></svg>
+            <b id="drop-text">把 PDF 拖到这里，或点击选择文件</b>
+            <span class="hint">最大 20 MB。文件会先在浏览器里用访问密码加密，再上传到仓库</span>
+          </label>
+        </div>
+        <div class="add-row">
+          <span class="add-label">解读方式</span>
+          <div class="seg" role="group" aria-label="解读方式">
+            <button data-mode="auto" aria-pressed="true">自动判断</button>
+            <button data-mode="deep" aria-pressed="false">精读</button>
+            <button data-mode="skim" aria-pressed="false">速览</button>
+          </div>
+          <span id="mode-hint" class="hint">按内容打分：达到精读线就写完整解读，否则只写速览</span>
+        </div>
+        <div id="token-box" class="token-box" hidden>
+          <p><b>第一次使用需要一个 GitHub 令牌</b>（网页要通过它触发云端解析任务，只保存在这个浏览器里）。
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">去创建令牌</a>：
+            仓库只选 <code>geosql-paper-digest</code>，权限里把 <b>Actions</b> 和 <b>Contents</b> 设为 <b>Read and write</b>。</p>
+          <label class="field"><span class="sr-only">GitHub 令牌</span><svg class="ic"><use href="#i-lock"/></svg>
+            <input id="add-token" type="password" placeholder="粘贴令牌（github_pat_…）" autocomplete="off"></label>
+        </div>
+        <p id="add-msg" class="add-msg" role="status" hidden></p>
+        <div class="add-actions">
+          <button id="add-submit" class="btn-primary">开始解析</button>
+          <button id="token-reset" class="btn-link" hidden>更换 GitHub 令牌</button>
+        </div>
+      </section>
+
       <div id="feed"></div>
       <div id="more-wrap" class="more-wrap" hidden><button id="more" class="btn-quiet">加载更早的推荐</button></div>
     </main>
