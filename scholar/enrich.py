@@ -43,7 +43,7 @@ def gather(p, fulltext_chars):
     """收集给 LLM 的原始信息；arXiv 论文顺便把全文缓存下来给精读用。"""
     oa = openalex_record(p)
     front = ""
-    if p.get("arxiv_id") or p.get("pdf_url"):
+    if "_fulltext" in p or p.get("arxiv_id") or p.get("pdf_url"):  # 上传的 PDF 已带正文
         if "_fulltext" not in p:
             p["_fulltext"] = get_fulltext(p, fulltext_chars)
         text = p["_fulltext"][0] or ""
